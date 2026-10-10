@@ -1,0 +1,25 @@
+name: Windows FCM startup checks
+on:
+  push:
+    branches: [main, 'fix/**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows-startup:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [powershell, pwsh]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Python unit tests
+        shell: ${{ matrix.shell }}
+        run: python -m unittest discover -s tests -v
+      - name: Launcher smoke tests
+        shell: ${{ matrix.shell }}
+        run: .\\tests\\Test-FcmStartup.ps1
