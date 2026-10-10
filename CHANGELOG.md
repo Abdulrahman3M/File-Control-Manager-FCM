@@ -4,7 +4,8 @@
 - Fixed fatal startup crash caused by case-insensitive PowerShell variable collision between `$Version` (switch) and `$version` (string).
 - Corrected Python runtime detection and prevented passing the `py.exe`-specific `-3` flag to `python.exe`.
 - Allowed zero-padded menu selections, matching displayed entries (`01`, `02`, etc.).
-- Added `-SelfTest` and `-SkipAdminPrompt` launch options for smoke testing.
+- Added `-SelfTest`, `-SmokeTest`, and `-SkipAdminPrompt` launcher options for unattended checks.
+- Fixed Windows redirected-output UnicodeEncodeError and avoided a console-input EOF traceback.
 - Added Windows PowerShell 5.1 and PowerShell 7 GitHub Actions startup test matrix.
 - Windows runtime status depends on CI results; PowerShell 6 remains unverified.
 
