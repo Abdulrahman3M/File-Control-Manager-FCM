@@ -22,6 +22,9 @@ FCM displays a consent menu before requesting administrator privileges. Windows 
 ### Startup troubleshooting (v2.1.1)
 - The error `Cannot convert value "System.String" to type "System.Management.Automation.SwitchParameter"` occurred because PowerShell treated `$Version` and `$version` as the same variable. The version string now uses `$appVersion`.
 - The Python launcher `py.exe` accepts `-3`; `python.exe` does not. FCM detects the runtime and validates Python 3.9+ before opening the interface.
-- To verify startup without opening the UI: `./FCM.ps1 -Version` and `./FCM.ps1 -SelfTest`.
+- To verify startup without opening the UI: `./FCM.ps1 -Version` and `./FCM.ps1 -SelfTest`; to test the dashboard without input: `./FCM.ps1 -SmokeTest`.
 - To run without the initial administrator prompt (e.g. in automated smoke tests): `./FCM.ps1 -SkipAdminPrompt`. ACL modification commands still require administrator privileges.
-- Windows PowerShell 5.1 / PowerShell 7 startup is exercised in GitHub Actions; PowerShell 6 remains UNVERIFIED unless separately tested.
+- Windows PowerShell 5.1 / PowerShell 7 startup is exercised in GitHub Actions with `-SmokeTest`; PowerShell 6 remains UNVERIFIED unless separately tested.
+
+- For redirected console output, FCM emits UTF-8 with a plain ASCII dashboard fallback; it does not require emoji-capable fonts.
+- If standard input ends unexpectedly, the terminal menu now exits cleanly instead of showing a Python traceback.
