@@ -9,6 +9,11 @@ import subprocess
 import sys
 from datetime import datetime
 
+# Captured output on Windows may default to cp1252, which cannot encode
+# the dashboard's box-drawing characters or users' Unicode file paths.
+if not sys.stdout.isatty() and hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 VERSION=(Path(__file__).parent/'VERSION').read_text(encoding='utf-8').strip()
 DATA=Path(os.environ.get('LOCALAPPDATA',str(Path.home())))/'FileControlManager'
 LOG=DATA/'activity.jsonl'
@@ -129,22 +134,27 @@ def main():
     if os.name!='nt':raise OSError('Windows only')
     selected=flags.path
     menu=['Choose file or folder','Inspect metadata, ACL and EFS status','Rename','Copy','Move','Permanently delete','Take ownership','Grant Administrators Full Control','Relaunch as Administrator','View logs','Exit']
-    if os.name=='nt':
+    if sys.stdout.isatty():
         os.system('')  # Enables virtual terminal processing in supported Windows consoles.
     while True:
-        os.system('cls')
-        print(colored('╔'+'═'*68+'╗','header'))
-        print(colored('║  '+icon('🗂','◆','*')+'  FILE CONTROL MANAGER  |  FILES • FOLDERS • SECURITY       ║','header'))
-        print(colored('╚'+'═'*68+'╝','header'))
+        if sys.stdout.isatty():
+            os.system('cls')
+            print(colored('╔'+'═'*68+'╗','header'))
+            print(colored('║  '+icon('🗂','◆','*')+'  FILE CONTROL MANAGER  |  FILES • FOLDERS • SECURITY       ║','header'))
+            print(colored('╚'+'═'*68+'╝','header'))
+        else:
+            print('+'+'-'*68+'+')
+            print('|  [*] FILE CONTROL MANAGER  |  FILES / FOLDERS / SECURITY')
+            print('+'+'-'*68+'+')
         print(colored(f'  VERSION v{VERSION}   |   MODE '+('ADMINISTRATOR' if administrator() else 'STANDARD USER'),'success' if administrator() else 'warning'))
         print('  TARGET:',selected or '(not selected)')
-        print('  '+'─'*66)
+        print('  '+('─' if sys.stdout.isatty() else '-') * 66)
         glyphs=[('📁','■','>'),('🔎','●','?'),('✏','►','~'),('📋','■','+'),('📦','►','>'),('🗑','×','X'),('🔑','♦','*'),('🛡','√','+'),('🚀','▲','^'),('📜','■','#'),('🚪','◄','<')]
         for number,item in enumerate(menu,1):
             emoji,symbol,ascii=glyphs[number-1]
             print(colored(f'  {number:02d}  ','menu')+icon(emoji,symbol,ascii)+'  '+item)
-        print(colored('  '+'─'*66,'dim'))
-        print(colored('  Tip: choose a number • confirm destructive actions • Ctrl+C exits','dim'))
+        print(colored('  '+('─' if sys.stdout.isatty() else '-') * 66,'dim'))
+        print(colored('  Tip: choose a number | confirm destructive actions | Ctrl+C exits','dim'))
         choice=normalize_menu_choice(input('\n  Select [01-11]: '))
         if choice=='11':return 0
         try:
