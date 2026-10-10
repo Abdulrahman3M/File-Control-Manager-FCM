@@ -18,19 +18,19 @@ $selfTest = & $exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $entry -Self
 Assert-Fcm ($LASTEXITCODE -eq 0) 'Python runtime detection succeeds without prompting for elevation'
 Assert-Fcm ($selfTest -match [regex]::Escape("v$version")) 'Runtime check reports the correct app version'
 
-# End-to-end smoke run: force standard mode, pipe a numbered menu exit selection
-# and assert that the Python UI actually launched rather than crashing.
+# End-to-end launcher smoke run without reliance on PowerShell pipeline input.
+# The application renders the real menu once and exits (no user input required).
 $previousErrorAction = $ErrorActionPreference
 try {
     $ErrorActionPreference = 'Continue'
-    $menuOutput = '11' | & $exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $entry -SkipAdminPrompt 2>&1 | Out-String
+    $menuOutput = & $exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $entry -SmokeTest 2>&1 | Out-String
     $menuExitCode = $LASTEXITCODE
 }
 finally {
     $ErrorActionPreference = $previousErrorAction
 }
 if ($menuExitCode -ne 0) { Write-Host ('FCM dashboard smoke output: ' + $menuOutput) }
-Assert-Fcm ($menuExitCode -eq 0) 'PowerShell can launch Python and exit cleanly'
+Assert-Fcm ($menuExitCode -eq 0) 'PowerShell can launch Python and render the menu without hanging'
 Assert-Fcm ($menuOutput -match 'FILE CONTROL MANAGER') 'The terminal interface renders its dashboard'
 
 Write-Host 'All FCM launcher checks passed.'
