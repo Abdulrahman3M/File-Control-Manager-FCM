@@ -140,7 +140,10 @@ def main():
         print(colored('  '+'─'*66,'dim'))
         print(colored('  Tip: choose a number • confirm destructive actions • Ctrl+C exits','dim'))
         choice=input('\n  Select [01-11]: ').strip()
-        if choice=='11' or choice.lower()=='q':return 0
+        # The UI displays zero-padded numbers; accept both '01' and '1'.
+        if choice.isascii() and choice.isdecimal():
+            choice=str(int(choice))
+        if choice=='11':return 0
         try:
             if choice=='1':selected=str(safe_path(input('  Path: '),destructive=False))
             elif choice=='9':elevated()
