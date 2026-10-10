@@ -129,6 +129,7 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--path',default='')
     parser.add_argument('--version',action='store_true')
+    parser.add_argument('--smoke-test',action='store_true',help=argparse.SUPPRESS)
     flags=parser.parse_args()
     if flags.version:print(VERSION);return 0
     if os.name!='nt':raise OSError('Windows only')
@@ -155,7 +156,12 @@ def main():
             print(colored(f'  {number:02d}  ','menu')+icon(emoji,symbol,ascii)+'  '+item)
         print(colored('  '+('─' if sys.stdout.isatty() else '-') * 66,'dim'))
         print(colored('  Tip: choose a number | confirm destructive actions | Ctrl+C exits','dim'))
-        choice=normalize_menu_choice(input('\n  Select [01-11]: '))
+        if flags.smoke_test:
+            return 0
+        try:
+            choice=normalize_menu_choice(input('\n  Select [01-11]: '))
+        except (EOFError, KeyboardInterrupt):
+            return 0
         if choice=='11':return 0
         try:
             if choice=='1':selected=str(safe_path(input('  Path: '),destructive=False))
