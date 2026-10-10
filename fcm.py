@@ -19,6 +19,12 @@ def icon(emoji,symbol,ascii):
     if os.environ.get('WT_SESSION') or os.environ.get('TERM_PROGRAM'):return emoji
     return symbol
 
+def normalize_menu_choice(raw):
+    value=raw.strip()
+    if value.isascii() and value.isdecimal():
+        return str(int(value))
+    return value
+
 def colored(message,kind):
     return COLORS[kind]+message+'\x1b[0m' if COLOR else message
 
@@ -139,10 +145,7 @@ def main():
             print(colored(f'  {number:02d}  ','menu')+icon(emoji,symbol,ascii)+'  '+item)
         print(colored('  '+'─'*66,'dim'))
         print(colored('  Tip: choose a number • confirm destructive actions • Ctrl+C exits','dim'))
-        choice=input('\n  Select [01-11]: ').strip()
-        # The UI displays zero-padded numbers; accept both '01' and '1'.
-        if choice.isascii() and choice.isdecimal():
-            choice=str(int(choice))
+        choice=normalize_menu_choice(input('\n  Select [01-11]: '))
         if choice=='11':return 0
         try:
             if choice=='1':selected=str(safe_path(input('  Path: '),destructive=False))
