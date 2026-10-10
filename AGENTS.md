@@ -11,3 +11,6 @@
 - Keep separate Python invocation logic for `py.exe` (supports `-3`) and `python.exe` (does not).
 - Test both `01` and `1` when the TUI displays two-digit numbered options.
 - Require GitHub Actions Windows startup checks for PowerShell 5.1 and 7 before describing the fix as verified; list PowerShell 6 separately.
+
+- Automated TUI checks must use `FCM.ps1 -SmokeTest` rather than piping interactive input through nested Windows PowerShell 5.1 processes.
+- Keep redirected output UTF-8-capable and provide ASCII fallback for terminal glyphs.
