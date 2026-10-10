@@ -21,6 +21,7 @@ Assert-Fcm ($selfTest -match [regex]::Escape("v$version")) 'Runtime check report
 # End-to-end smoke run: force standard mode, pipe a numbered menu exit selection
 # and assert that the Python UI actually launched rather than crashing.
 $menuOutput = '11' | & $exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $entry -SkipAdminPrompt 2>&1 | Out-String
+if ($LASTEXITCODE -ne 0) { Write-Host ('FCM dashboard smoke output: ' + $menuOutput) }
 Assert-Fcm ($LASTEXITCODE -eq 0) 'PowerShell can launch Python and exit cleanly'
 Assert-Fcm ($menuOutput -match 'FILE CONTROL MANAGER') 'The terminal interface renders its dashboard'
 
