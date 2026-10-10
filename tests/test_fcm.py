@@ -8,7 +8,7 @@ fcm=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fcm)
 class Tests(unittest.TestCase):
     def test_version(self):
-        self.assertEqual(fcm.VERSION,'2.0.0')
+        self.assertEqual(fcm.VERSION,'2.1.0')
     def test_validate(self):
         with tempfile.TemporaryDirectory() as root:
             p=Path(root)/'sample.txt'
