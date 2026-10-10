@@ -3,7 +3,8 @@ param(
     [switch]$Version,
     [string]$InitialPath = '',
     [switch]$SkipAdminPrompt,
-    [switch]$SelfTest
+    [switch]$SelfTest,
+    [switch]$SmokeTest
 )
 
 $ErrorActionPreference = 'Stop'
@@ -78,7 +79,7 @@ $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $principal = New-Object Security.Principal.WindowsPrincipal($identity)
 $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
-if (-not $isAdmin -and -not $SkipAdminPrompt) {
+if (-not $isAdmin -and -not $SkipAdminPrompt -and -not $SmokeTest) {
     Write-Host ''
     Write-Host '  FILE CONTROL MANAGER | Permission Request' -ForegroundColor Cyan
     Write-Host '  Ordinary file management can run without administrator access.' -ForegroundColor Gray
@@ -112,6 +113,7 @@ if (-not $isAdmin -and -not $SkipAdminPrompt) {
 $pythonExecutable = $pythonRuntime.Executable
 $pythonArguments = @($pythonRuntime.Prefix) + @((Join-Path $root 'fcm.py'))
 if ($InitialPath) { $pythonArguments += @('--path', $InitialPath) }
+if ($SmokeTest) { $pythonArguments += '--smoke-test' }
 
 try {
     & $pythonExecutable @pythonArguments
