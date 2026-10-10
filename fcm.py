@@ -12,8 +12,13 @@ from datetime import datetime
 VERSION=(Path(__file__).parent/'VERSION').read_text(encoding='utf-8').strip()
 DATA=Path(os.environ.get('LOCALAPPDATA',str(Path.home())))/'FileControlManager'
 LOG=DATA/'activity.jsonl'
-COLOR=sys.stdout.isatty() and bool(os.environ.get('WT_SESSION') or os.environ.get('TERM'))
-COLORS={'header':'\x1b[96m','menu':'\x1b[94m','error':'\x1b[91m','warning':'\x1b[93m'}
+COLOR=sys.stdout.isatty() and not bool(os.environ.get('NO_COLOR'))
+COLORS={'header':'\x1b[96m','menu':'\x1b[94m','error':'\x1b[91m','warning':'\x1b[93m','success':'\x1b[92m','dim':'\x1b[90m'}
+def icon(emoji,symbol,ascii):
+    if not sys.stdout.isatty() or os.environ.get('FCM_ICONS')=='ascii':return ascii
+    if os.environ.get('WT_SESSION') or os.environ.get('TERM_PROGRAM'):return emoji
+    return symbol
+
 def colored(message,kind):
     return COLORS[kind]+message+'\x1b[0m' if COLOR else message
 
@@ -118,16 +123,23 @@ def main():
     if os.name!='nt':raise OSError('Windows only')
     selected=flags.path
     menu=['Choose file or folder','Inspect metadata, ACL and EFS status','Rename','Copy','Move','Permanently delete','Take ownership','Grant Administrators Full Control','Relaunch as Administrator','View logs','Exit']
+    if os.name=='nt':
+        os.system('')  # Enables virtual terminal processing in supported Windows consoles.
     while True:
         os.system('cls')
-        print(colored('╔'+'═'*66+'╗','header'))
-        print(colored('║  ◈ FILE CONTROL MANAGER       WINDOWS FILE & NTFS TOOLKIT    ║','header'))
-        print(colored('╚'+'═'*66+'╝','header'))
-        print(f'  VERSION v{VERSION}   |   MODE '+('ADMIN' if administrator() else 'STANDARD'))
+        print(colored('╔'+'═'*68+'╗','header'))
+        print(colored('║  '+icon('🗂','◆','*')+'  FILE CONTROL MANAGER  |  FILES • FOLDERS • SECURITY       ║','header'))
+        print(colored('╚'+'═'*68+'╝','header'))
+        print(colored(f'  VERSION v{VERSION}   |   MODE '+('ADMINISTRATOR' if administrator() else 'STANDARD USER'),'success' if administrator() else 'warning'))
         print('  TARGET:',selected or '(not selected)')
         print('  '+'─'*66)
-        for number,item in enumerate(menu,1):print(colored(f'  {number:>2}. ','menu')+item)
-        choice=input('\n  Choose [1-11]: ').strip()
+        glyphs=[('📁','■','>'),('🔎','●','?'),('✏','►','~'),('📋','■','+'),('📦','►','>'),('🗑','×','X'),('🔑','♦','*'),('🛡','√','+'),('🚀','▲','^'),('📜','■','#'),('🚪','◄','<')]
+        for number,item in enumerate(menu,1):
+            emoji,symbol,ascii=glyphs[number-1]
+            print(colored(f'  {number:02d}  ','menu')+icon(emoji,symbol,ascii)+'  '+item)
+        print(colored('  '+'─'*66,'dim'))
+        print(colored('  Tip: choose a number • confirm destructive actions • Ctrl+C exits','dim'))
+        choice=input('\n  Select [01-11]: ').strip()
         if choice=='11' or choice.lower()=='q':return 0
         try:
             if choice=='1':selected=str(safe_path(input('  Path: '),destructive=False))
