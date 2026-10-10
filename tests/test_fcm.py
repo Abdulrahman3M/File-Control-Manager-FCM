@@ -8,7 +8,13 @@ fcm=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fcm)
 class Tests(unittest.TestCase):
     def test_version(self):
-        self.assertEqual(fcm.VERSION,'2.1.0')
+        self.assertEqual(fcm.VERSION,'2.1.1')
+    def test_numbered_menu_choices(self):
+        self.assertEqual(fcm.normalize_menu_choice('01'), '1')
+        self.assertEqual(fcm.normalize_menu_choice('1'), '1')
+        self.assertEqual(fcm.normalize_menu_choice('11'), '11')
+        self.assertEqual(fcm.normalize_menu_choice('x'), 'x')
+
     def test_validate(self):
         with tempfile.TemporaryDirectory() as root:
             p=Path(root)/'sample.txt'
