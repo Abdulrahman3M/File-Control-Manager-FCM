@@ -1,0 +1,39 @@
+name: Windows FCM startup checks
+on:
+  push:
+    branches:
+      - main
+      - 'fix/**'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  powershell-51:
+    name: Windows PowerShell 5.1
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Python unit tests
+        shell: powershell
+        run: python -m unittest discover -s tests -v
+      - name: Launcher smoke tests
+        shell: powershell
+        run: ./tests/Test-FcmStartup.ps1
+
+  powershell-7:
+    name: PowerShell 7
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Python unit tests
+        shell: pwsh
+        run: python -m unittest discover -s tests -v
+      - name: Launcher smoke tests
+        shell: pwsh
+        run: ./tests/Test-FcmStartup.ps1
