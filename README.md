@@ -1,4 +1,4 @@
-# File Control Manager (FCM) v2.0.0
+# File Control Manager (FCM) v2.1.0
 
 Terminal-based file and folder manager for Windows, inspired by the FFmpeg User Manager terminal layout.
 
@@ -13,3 +13,7 @@ ACLs are access permissions, not encryption. FCM does not decrypt EFS or BitLock
 Tests: `python -m unittest discover -s tests -v`. **Windows and PowerShell 5.1/6/7 runtime integration tests have not yet been performed.**
 
 `VERSION` is the authoritative version file, to be synchronized with README and CHANGELOG.
+
+
+### Administrator permissions and security warnings
+FCM displays a consent menu before requesting administrator privileges. Windows UAC remains active. Windows SmartScreen or downloaded-file warnings are separate and cannot be removed by the app; signing and trusted distribution are recommended. The TUI supports ANSI colors when the terminal allows them and emoji/symbol/ASCII glyph fallback. Windows runtime tests are pending.
