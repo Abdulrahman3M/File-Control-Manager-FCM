@@ -33,4 +33,22 @@ if ($menuExitCode -ne 0) { Write-Host ('FCM dashboard smoke output: ' + $menuOut
 Assert-Fcm ($menuExitCode -eq 0) 'PowerShell can launch Python and render the menu without hanging'
 Assert-Fcm ($menuOutput -match 'FILE CONTROL MANAGER') 'The terminal interface renders its dashboard'
 
+# Exercise the actual double-click entry file (CMD/BAT), not just FCM.ps1.
+Push-Location $root
+try {
+    $batVersion = & $env:ComSpec /d /c 'FCM.bat -Version' 2>&1 | Out-String
+    $batVersionExit = $LASTEXITCODE
+    Assert-Fcm ($batVersionExit -eq 0) 'FCM.bat version launch exits successfully'
+    Assert-Fcm ($batVersion.Trim() -eq "File Control Manager v$version") 'FCM.bat resolves the correct version'
+
+    $batDashboard = & $env:ComSpec /d /c 'FCM.bat -SmokeTest' 2>&1 | Out-String
+    $batDashboardExit = $LASTEXITCODE
+    if ($batDashboardExit -ne 0) { Write-Host ('FCM.bat smoke output: ' + $batDashboard) }
+    Assert-Fcm ($batDashboardExit -eq 0) 'FCM.bat renders the dashboard and exits'
+    Assert-Fcm ($batDashboard -match 'FILE CONTROL MANAGER') 'FCM.bat launches the Python dashboard'
+}
+finally {
+    Pop-Location
+}
+
 Write-Host 'All FCM launcher checks passed.'
