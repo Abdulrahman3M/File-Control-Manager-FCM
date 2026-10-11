@@ -48,6 +48,7 @@ $warningStyle = Get-FcmStyle 'Warning'
 if ($null -ne $oldNoColor) { $env:NO_COLOR = $oldNoColor }
 Initialize-FcmTheme -IconMode Auto -Platform Windows -NoColor:([bool]$env:NO_COLOR)
 Assert-FcmTest ($titleStyle.Foreground -eq 'Cyan' -and $successStyle.Foreground -eq 'Green' -and $warningStyle.Foreground -eq 'Yellow') 'Semantic title, success, and warning colors are configured'
+Assert-FcmTest ((Get-FcmIconColor 'Folder') -eq 'Yellow' -and (Get-FcmIconColor 'Delete') -eq 'Red' -and (Get-FcmIconColor 'Success') -eq 'Green') 'Action and status icons have distinct semantic colors'
 }
 finally {
     $env:FCM_ICONS = $oldIconMode
@@ -58,7 +59,7 @@ $items = @(
     @{ Id = 'second'; Label = 'Second action'; Icon = 'Search'; Description = 'Second description.'; Disabled = $false }
 )
 Set-FcmScriptedInput -Token @('01')
-$choice = Show-FcmMenu -Title 'Test' -Items $items -Status 'Ready' -AppVersion '3.0.0' -ModeLabel 'ADMINISTRATOR SESSION'
+$choice = Show-FcmMenu -Title 'Test' -Items $items -Status 'Ready' -AppVersion '3.1.0' -ModeLabel 'ADMINISTRATOR SESSION'
 Assert-FcmTest ($choice -eq 'first') 'Zero-padded numeric shortcut selects the intended row'
 
 Set-FcmScriptedInput -Token @('1','ENTER')

@@ -28,6 +28,10 @@ Assert-Fcm ($userDisposition -eq 'Elevate') 'A normal interactive startup must r
 Assert-Fcm ($diagnosticDisposition -eq 'Diagnostic') 'SelfTest and SmokeTest stay non-elevating'
 $quotedArguments = ConvertTo-FcmWindowsArgumentLine -Argument @('-File','C:\Program Files\FCM\FCM.ps1','-InitialPath','D:\Data Folder\05 File.txt')
 Assert-Fcm ($quotedArguments -eq '"-File" "C:\Program Files\FCM\FCM.ps1" "-InitialPath" "D:\Data Folder\05 File.txt"') 'UAC relaunch arguments preserve spaces and numbered paths'
+$terminalArguments = Get-FcmWindowsTerminalLaunchArguments -PowerShellPath 'C:\Program Files\PowerShell\7\pwsh.exe' -ScriptPath 'C:\Program Files\FCM\FCM.ps1' -InitialPath 'D:\Data Folder\05 File.txt'
+Assert-Fcm ($terminalArguments.Contains('"--window" "new"') -and $terminalArguments.Contains('"new-tab"') -and $terminalArguments.Contains('"--title"') -and $terminalArguments.Contains('"C:\Program Files\PowerShell\7\pwsh.exe"') -and $terminalArguments.Contains('"D:\Data Folder\05 File.txt"')) 'Elevated launch opens a dedicated Windows Terminal window with quoted PowerShell and target paths'
+$actionTerminalArguments = Get-FcmWindowsTerminalLaunchArguments -PowerShellPath 'pwsh.exe' -ScriptPath 'C:\Program Files\FCM\FCM.ps1' -StartAction 'ownership'
+Assert-Fcm ($actionTerminalArguments.Contains('"-StartAction" "ownership"')) 'Elevated security actions retain their selected operation in Windows Terminal'
 $uacCanceled = New-Object System.ComponentModel.Win32Exception(1223)
 Assert-Fcm ((Get-FcmStartupElevationStatus -Exception $uacCanceled) -eq 'Canceled') 'Windows UAC cancellation is recognized and closes the launcher'
 $preflightFailures = @(Get-FcmPreflightFailures -Root $root)

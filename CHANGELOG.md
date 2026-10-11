@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.1.0 — 2026-10-11
+- Elevated startup now opens a dedicated Windows Terminal window running the same PowerShell executable and FCM command; the classic console remains available when Windows Terminal is missing.
+- Elevated follow-up actions also open in Windows Terminal, with their selected target and operation preserved.
+- Added semantic colors for action and status icons, with terminal-aware Emoji, symbol, and ASCII fallback behavior.
+- Updated the startup checks and usage documentation for the elevated Windows Terminal flow.
+
 ## 3.0.0 — 2026-10-10
 - Replaced the Python operation backend with native PowerShell file operations and Windows security tools; removed Python runtime and test dependencies.
 - Added startup preflight diagnostics for Windows, PowerShell, required project files, and Windows utilities.

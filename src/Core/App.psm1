@@ -45,6 +45,12 @@ function Start-FcmElevatedSession {
         if ($InitialPath) { $arguments += @('-InitialPath',$InitialPath) }
         if ($StartAction) { $arguments += @('-StartAction',$StartAction) }
         if ($AdminSession) { $arguments += '-AdminSession' }
+        $terminal = Get-FcmWindowsTerminalExecutable
+        if ($terminal) {
+            $argumentLine = Get-FcmWindowsTerminalLaunchArguments -PowerShellPath $executable -ScriptPath $ScriptPath -InitialPath $InitialPath -StartAction $StartAction
+            $null = Start-Process -FilePath $terminal -Verb RunAs -ArgumentList $argumentLine -PassThru -ErrorAction Stop
+            return [pscustomobject]@{ ok = $true; message = 'An elevated FCM session has opened in Windows Terminal.'; details = 'Continue in the new elevated window.'; path = $InitialPath }
+        }
         $argumentLine = ConvertTo-FcmWindowsArgumentLine -Argument $arguments
         $process = Start-Process -FilePath $executable -Verb RunAs -ArgumentList $argumentLine -Wait -PassThru -ErrorAction Stop
         if ($process.ExitCode -ne 0) {

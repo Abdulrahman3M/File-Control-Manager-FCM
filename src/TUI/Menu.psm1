@@ -1,6 +1,6 @@
 function New-FcmMenuLine {
-    param([string]$Text,[string]$Role = 'Normal')
-    return @{ Text = $Text; Role = $Role }
+    param([string]$Text,[string]$Role = 'Normal',[string]$IconName = '',[string]$Suffix = '')
+    return @{ Text = $Text; Role = $Role; IconName = $IconName; Suffix = $Suffix }
 }
 
 function Show-FcmMenu {
@@ -11,7 +11,7 @@ function Show-FcmMenu {
         [Parameter(Mandatory = $true)][object[]]$Items,
         [int]$SelectedIndex = 0,
         [string]$Status = '',
-        [string]$AppVersion = '3.0.0',
+        [string]$AppVersion = '3.1.0',
         [string]$ModeLabel = 'ADMINISTRATOR SESSION',
         [string]$Target = '(not selected)',
         [switch]$Static
@@ -23,9 +23,9 @@ function Show-FcmMenu {
     while ($true) {
         $size = Get-FcmTerminalSize
         $lines = New-Object 'System.Collections.Generic.List[object]'
-        $lines.Add((New-FcmMenuLine ('  >_  FILE CONTROL MANAGER  (v' + $AppVersion + ')') 'Title'))
+        $lines.Add((New-FcmMenuLine '  ' 'Title' 'App' ('  FILE CONTROL MANAGER  (v' + $AppVersion + ')')))
         $lines.Add((New-FcmMenuLine ('  ' + $Title + '  |  ' + $Context) 'Dim'))
-        $lines.Add((New-FcmMenuLine ('  ' + (Get-FcmIcon 'Admin') + '  ' + $ModeLabel) 'Info'))
+        $lines.Add((New-FcmMenuLine '  ' 'Info' 'Admin' ('  ' + $ModeLabel)))
         $lines.Add((New-FcmMenuLine ('  TARGET  ' + $Target) 'Normal'))
         $lines.Add((New-FcmMenuLine ('  ' + ('-' * [Math]::Min(72,$size.Width - 4))) 'Border'))
         $lines.Add((New-FcmMenuLine '  ACTIONS' 'Heading'))
@@ -45,9 +45,8 @@ function Show-FcmMenu {
             $role = 'Normal'
             if ($index -eq $SelectedIndex) { $marker = '> '; $role = 'Selected' }
             if ($item.Disabled) { $role = 'Dim' }
-            $icon = Get-FcmIcon ([string]$item.Icon)
-            $label = ('  {0}{1}  {2}  {3}' -f $marker,$number,$icon,[string]$item.Label)
-            $lines.Add((New-FcmMenuLine $label $role))
+            $prefix = ('  {0}{1}  ' -f $marker,$number)
+            $lines.Add((New-FcmMenuLine $prefix $role ([string]$item.Icon) ('  ' + [string]$item.Label)))
         }
         if ($last -lt $Items.Count - 1) { $lines.Add((New-FcmMenuLine '  ... more actions below ...' 'Dim')) }
         $lines.Add((New-FcmMenuLine ('  ' + ('-' * [Math]::Min(72,$size.Width - 4))) 'Border'))

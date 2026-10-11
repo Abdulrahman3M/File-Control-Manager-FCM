@@ -22,7 +22,7 @@ function Write-FcmStartupMessage {
     param([string]$Title,[string[]]$Message,[string]$Role = 'Error')
     if (Get-Command -Name Write-FcmScreen -ErrorAction SilentlyContinue) {
         $lines = New-Object 'System.Collections.Generic.List[object]'
-        $lines.Add(@{ Text = ('  >_ FILE CONTROL MANAGER (v' + $appVersion + ')'); Role = 'Title' })
+        $lines.Add(@{ Text = '  '; Role = 'Title'; IconName = 'App'; Suffix = '  FILE CONTROL MANAGER (v' + $appVersion + ')' })
         $lines.Add(@{ Text = ('  ' + $Title); Role = $Role })
         foreach ($line in $Message) { $lines.Add(@{ Text = ('  ' + $line); Role = $Role }) }
         Write-FcmScreen -Line $lines.ToArray()

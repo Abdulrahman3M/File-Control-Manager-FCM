@@ -34,10 +34,10 @@ function Show-FcmNotice {
     )
     $icon = Get-FcmIcon $Kind
     $lines = New-Object 'System.Collections.Generic.List[object]'
-    $lines.Add(@{ Text = ('  ' + (Get-FcmIcon 'App') + '  FILE CONTROL MANAGER'); Role = 'Title' })
+    $lines.Add(@{ Text = '  '; Role = 'Title'; IconName = 'App'; Suffix = '  FILE CONTROL MANAGER' })
     $lines.Add(@{ Text = ('  ' + $Title); Role = 'Heading' })
     $lines.Add(@{ Text = '  '; Role = 'Normal' })
-    $lines.Add(@{ Text = ('  ' + $icon + '  ' + $Message); Role = $Kind })
+    $lines.Add(@{ Text = '  '; Role = $Kind; IconName = $Kind; Suffix = '  ' + $Message })
     if ($Details) {
         $lines.Add(@{ Text = '  '; Role = 'Normal' })
         foreach ($detailLine in ($Details -split ([string][char]10))) {

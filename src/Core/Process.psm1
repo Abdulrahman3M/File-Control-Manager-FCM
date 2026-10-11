@@ -48,6 +48,28 @@ function Get-FcmStartupElevationStatus {
     return 'Failed'
 }
 
+function Get-FcmWindowsTerminalExecutable {
+    $command = Get-Command -Name 'wt.exe' -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($command) { return [string]$command.Source }
+    return ''
+}
+
+function Get-FcmWindowsTerminalLaunchArguments {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)][string]$PowerShellPath,
+        [Parameter(Mandatory = $true)][string]$ScriptPath,
+        [string]$InitialPath = '',
+        [string]$StartAction = ''
+    )
+    $arguments = @('--window','new','new-tab','--title','File Control Manager (Administrator)')
+    $arguments += @('--startingDirectory',(Split-Path -Parent $ScriptPath))
+    $arguments += @($PowerShellPath,'-NoLogo','-NoProfile','-ExecutionPolicy','Bypass','-File',$ScriptPath,'-AdminSession')
+    if ($InitialPath) { $arguments += @('-InitialPath',$InitialPath) }
+    if ($StartAction) { $arguments += @('-StartAction',$StartAction) }
+    return (ConvertTo-FcmWindowsArgumentLine -Argument $arguments)
+}
+
 function Start-FcmStartupElevation {
     [CmdletBinding()]
     param(
@@ -56,11 +78,18 @@ function Start-FcmStartupElevation {
     )
     try {
         $executable = Get-FcmPowerShellExecutable
+        $terminal = Get-FcmWindowsTerminalExecutable
+        if ($terminal) {
+            $argumentLine = Get-FcmWindowsTerminalLaunchArguments -PowerShellPath $executable -ScriptPath $ScriptPath -InitialPath $InitialPath -StartAction $StartAction
+            $null = Start-Process -FilePath $terminal -Verb RunAs -ArgumentList $argumentLine -PassThru -ErrorAction Stop
+            return [pscustomobject]@{ Status = 'Started'; Terminal = 'Windows Terminal'; Message = 'Administrator approval was granted. FCM is opening in a new elevated Windows Terminal window.' }
+        }
         $arguments = @('-NoLogo','-NoProfile','-ExecutionPolicy','Bypass','-File',$ScriptPath,'-AdminSession')
         if ($InitialPath) { $arguments += @('-InitialPath',$InitialPath) }
+        if ($StartAction) { $arguments += @('-StartAction',$StartAction) }
         $argumentLine = ConvertTo-FcmWindowsArgumentLine -Argument $arguments
         $null = Start-Process -FilePath $executable -Verb RunAs -ArgumentList $argumentLine -PassThru -ErrorAction Stop
-        return [pscustomobject]@{ Status = 'Started'; Message = 'Administrator approval was granted. FCM is opening in the elevated PowerShell session.' }
+        return [pscustomobject]@{ Status = 'Started'; Terminal = 'PowerShell console'; Message = 'Administrator approval was granted. FCM is opening in the elevated PowerShell console. Install Windows Terminal to use the modern terminal window.' }
     }
     catch {
         if ((Get-FcmStartupElevationStatus -Exception $_.Exception) -eq 'Canceled') {
@@ -70,4 +99,4 @@ function Start-FcmStartupElevation {
     }
 }
 
-Export-ModuleMember -Function ConvertTo-FcmWindowsArgumentLine,Get-FcmStartupElevationStatus,Start-FcmStartupElevation
+Export-ModuleMember -Function ConvertTo-FcmWindowsArgumentLine,Get-FcmStartupElevationStatus,Get-FcmWindowsTerminalExecutable,Get-FcmWindowsTerminalLaunchArguments,Start-FcmStartupElevation

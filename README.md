@@ -1,4 +1,4 @@
-# File Control Manager (FCM) v3.0.0
+# File Control Manager (FCM) v3.1.0
 
 FCM is a PowerShell-only, keyboard-first terminal file and folder manager. It runs inside PowerShell or Windows Terminal and uses native PowerShell file operations plus Windows security utilities. It has no Python or third-party runtime dependency.
 
@@ -7,9 +7,9 @@ FCM is a PowerShell-only, keyboard-first terminal file and folder manager. It ru
 - Windows 10 or 11
 - Windows PowerShell 5.1 or PowerShell 7 (PowerShell 6 is supported by the code but is not in the automated test matrix)
 - Windows utilities `icacls.exe`, `cipher.exe`, and `takeown.exe`
-- Windows Terminal is recommended; the classic PowerShell console is also supported
+- Windows Terminal is recommended and is used for elevated sessions when installed; the classic PowerShell console remains a fallback
 
-Start `FCM.bat` or run `./FCM.ps1` from PowerShell. FCM checks Windows, PowerShell, required files, and utilities before showing the normal interface. If checks pass and the current session is not elevated, Windows presents its standard UAC prompt. Approval starts the TUI in the elevated PowerShell process. Canceling UAC closes FCM without running an action. FCM does not change system execution policy.
+Start `FCM.bat` or run `./FCM.ps1` from PowerShell. FCM checks Windows, PowerShell, required files, and utilities before showing the normal interface. If checks pass and the current session is not elevated, Windows presents its standard UAC prompt. When Windows Terminal is installed, approval opens a new Windows Terminal window with an elevated PowerShell tab; Windows Terminal does not mix administrator and non-administrator tabs in one window. If Windows Terminal is unavailable, FCM falls back to the elevated PowerShell console. Canceling UAC closes FCM without running an action. FCM does not change system execution policy.
 
 ```powershell
 ./FCM.ps1 -Version
@@ -23,7 +23,7 @@ Start `FCM.bat` or run `./FCM.ps1` from PowerShell. FCM checks Windows, PowerShe
 
 The dashboard displays the application version, administrator mode, selected target, available actions, contextual help, and status. Use Up/Down and Enter, or type an action number such as `01` or `11`. Esc backs out; Ctrl+C exits. Path and filename prompts support typing, paste, navigation keys, Backspace, Delete, and Ctrl+U.
 
-FCM uses semantic console colors and selects Emoji, Windows console symbols, or ASCII icons according to the terminal. Set `FCM_ICONS=emoji`, `FCM_ICONS=symbol`, or `FCM_ICONS=ascii` to choose explicitly. Set `NO_COLOR` to disable colors. Redirected output uses readable ASCII icons.
+FCM colors each action and status icon by meaning (for example, yellow for folders, green for copy/success, and red for deletion/errors). Windows Terminal uses Emoji icons when its terminal session is detected; PowerShell and older consoles receive symbol or ASCII fallbacks. Set `FCM_ICONS=emoji`, `FCM_ICONS=symbol`, or `FCM_ICONS=ascii` to choose explicitly. Set `NO_COLOR` to disable colors. Redirected output uses readable ASCII icons.
 
 ## Actions
 

@@ -32,6 +32,11 @@ $script:FcmPalette = @{
     Info = @{ Foreground = 'Blue'; Background = $null }
     Border = @{ Foreground = 'DarkCyan'; Background = $null }
 }
+$script:FcmIconColors = @{
+    App = 'Cyan'; Folder = 'Yellow'; Search = 'Cyan'; Rename = 'Magenta'; Copy = 'Green'; Move = 'Blue';
+    Delete = 'Red'; Key = 'Yellow'; Shield = 'Blue'; Admin = 'Blue'; Logs = 'DarkCyan'; Exit = 'DarkGray';
+    Success = 'Green'; Warning = 'Yellow'; Error = 'Red'; Info = 'Cyan'
+}
 
 function Initialize-FcmTheme {
     param([string]$IconMode = 'Auto',[string]$Platform = 'Windows',[switch]$NoColor)
@@ -64,6 +69,12 @@ function Get-FcmIcon {
     return [string]$script:FcmIconTable[$Name].Ascii
 }
 
+function Get-FcmIconColor {
+    param([Parameter(Mandatory = $true)][string]$Name)
+    if ($script:FcmIconColors.ContainsKey($Name)) { return [string]$script:FcmIconColors[$Name] }
+    return 'Cyan'
+}
+
 function Get-FcmStyle {
     param([Parameter(Mandatory = $true)][string]$Role)
     if (-not $script:FcmColorEnabled -or -not $script:FcmPalette.ContainsKey($Role)) {
@@ -72,4 +83,4 @@ function Get-FcmStyle {
     return $script:FcmPalette[$Role]
 }
 
-Export-ModuleMember -Function Initialize-FcmTheme,Get-FcmIconTier,Get-FcmIcon,Get-FcmStyle
+Export-ModuleMember -Function Initialize-FcmTheme,Get-FcmIconTier,Get-FcmIcon,Get-FcmIconColor,Get-FcmStyle
