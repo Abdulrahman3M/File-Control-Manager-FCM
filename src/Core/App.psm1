@@ -158,65 +158,4 @@ function Invoke-FcmMenuAction {
             if ($destination -eq 'Back') { return }
             $verb = 'Copy'
             if ($Action -eq 'move') { $verb = 'Move' }
-            if (-not (Show-FcmConfirm -Title ('Confirm ' + $verb.ToLowerInvariant()) -Message ($verb + ' ' + $Path + ' to ' + $destination + '?'))) { return }
-            $completed = Invoke-FcmBackendResult -Operation $Action -Path $Path -Destination $destination
-            if ($completed -and $Action -eq 'move') {
-                $script:FcmTarget = Join-Path $destination (Split-Path -Leaf $Path)
-            }
-            return
-        }
-        'delete' {
-            $confirmed = Show-FcmConfirm -Title 'Permanent deletion' -Message ('Permanently delete ' + $Path + '? This does not use the Recycle Bin.') -Destructive -RequireText 'DELETE'
-            if ($confirmed) {
-                $null = Invoke-FcmBackendResult -Operation 'delete' -Path $Path -Confirmed
-                if (-not (Test-Path -LiteralPath $Path)) { $script:FcmTarget = '' }
-            }
-            return
-        }
-        default {
-            Show-FcmNotice -Title 'Unavailable action' -Message 'This action is not available.' -Kind 'Warning'
-        }
-    }
-}
-
-function Start-FcmApp {
-    [CmdletBinding()]
-    param(
-        [string]$InitialPath = '',
-        [string]$ScriptPath = '',
-        [string]$StartAction = '',
-        [switch]$AdminSession,
-        [switch]$SmokeTest,
-        [string[]]$ScriptedInput = @()
-    )
-    $script:FcmAppVersion = (Get-Content -LiteralPath (Join-Path (Split-Path -Parent $ScriptPath) 'VERSION') -Raw).Trim()
-    $script:FcmTarget = $InitialPath
-    $environment = Get-FcmEnvironment
-    if ($environment.IsAdministrator) { $modeLabel = 'ADMINISTRATOR SESSION' }
-    else { $modeLabel = 'STANDARD USER' }
-    $script:FcmModeLabel = $modeLabel
-    Initialize-FcmTheme -IconMode 'Auto' -Platform $environment.Platform -NoColor:([bool]$env:NO_COLOR -or $environment.OutputRedirected)
-    Initialize-FcmRenderer -PlainOutput:($SmokeTest -or $ScriptedInput.Count -gt 0 -or $environment.OutputRedirected)
-    if ($ScriptedInput.Count -gt 0) { Set-FcmScriptedInput -Token $ScriptedInput }
-    $items = New-FcmMenuItems
-
-    if ($StartAction) {
-        Invoke-FcmAdminAction -Action $StartAction -Path $InitialPath -ScriptPath $ScriptPath -FromElevatedLaunch
-        return
-    }
-    if ($SmokeTest) {
-        $null = Show-FcmMenu -Title 'Files, folders and security' -Context 'DIAGNOSTIC MODE' -Items $items -Status 'Preflight passed. This diagnostic mode does not require administrator access.' -AppVersion $script:FcmAppVersion -ModeLabel $modeLabel -Target $(if ($script:FcmTarget) { $script:FcmTarget } else { '(not selected)' }) -Static
-        return
-    }
-
-    while ($true) {
-        $context = 'Files | folders | security'
-        if ($AdminSession) { $context = 'Administrator session' }
-        $selected = Show-FcmMenu -Title $context -Context 'Main menu' -Items $items -Status 'Administrator session active. Review each permanent or security change before confirming.' -AppVersion $script:FcmAppVersion -ModeLabel $modeLabel -Target $(if ($script:FcmTarget) { $script:FcmTarget } else { '(not selected)' })
-        if ($selected -eq 'Exit' -or $selected -eq 'exit') { return }
-        if ($selected -eq 'Back') { continue }
-        Invoke-FcmMenuAction -Action $selected -Path $script:FcmTarget -ScriptPath $ScriptPath
-    }
-}
-
-Export-ModuleMember -Function Start-FcmApp,New-FcmMenuItems
+            if (-not (Show-FcmConfirm -Title ('Confirm ' + $verb.ToLowerInvariant()) -Message ($verb + ' ' + $Path + ' to ' + $destination + '?')))Îç<∂âûÀk∫wµÁQ¡’–ÄµçπΩ—µÖ—ç†Äù%1Å=9QI=0Å59IÒ5%9%MQIQ=HÅMMM%=9ÒMQ9IÅUMIÒ%9=MQ%Å5=ÄÅQIPÅÄÅQ%=9Lú§ÄùQ°îÅëÖÕ°âΩÖ…êÅçΩπ—Ö•πÃÅπºÅ±ïùÖç‰ÅÖ±∞µ’¡¡ï…çÖÕîÅë•Õ¡±Ö‰Å°ïÖë•πùÃú)ôΩ…ïÖç†Ä†ë±Öâï∞Å•∏Å †ù°ΩΩÕîÅô•±îÅΩ»ÅôΩ±ëï»ú∞ù%πÕ¡ïç–Åµï—ÖëÖ—Ñ∞Å0ÅÖπêÅLÅÕ—Ö—’Ãú∞ùIïπÖµîú∞ùΩ¡‰ú∞ù5ΩŸîú∞ùAï…µÖπïπ—±‰Åëï±ï—îú∞ùQÖ≠îÅΩ›πï…Õ°•¿ú∞ù…Öπ–Åëµ•π•Õ—…Ö—Ω…ÃÅ’±∞ÅΩπ—…Ω∞ú∞ù=¡ï∏Åëµ•π•Õ—…Ö—Ω»ÅÕïÕÕ•Ω∏ú∞ùY•ï‹ÅÖç—•Ÿ•—‰Å±ΩùÃú∞ù·•–ú§§ÅÏ(ÄÄÄÅÕÕï…–µç¥Ä†ëµïπ’=’—¡’–ÄµµÖ—ç†Åm…ïùï·tËÈÕçÖ¡î†ë±Öâï∞§§Ä†ùQ°îÅëÖÕ°âΩÖ…êÅ≠ïï¡ÃÅ—°îÄàúÄ¨Äë±Öâï∞Ä¨ÄúàÅÖç—•Ω∏ú§)Ù((ëÕç…•¡—ïë·•–ÄÙÄòÄëï·îÄµ9Ω1ΩùºÄµ9ΩA…Ωô•±îÄµ·ïç’—•ΩπAΩ±•ç‰Å	Â¡ÖÕÃÄµ•±îÄëïπ—…‰ÄµMç…•¡—ïë%π¡’–ÄúƒƒúÄ»¯òƒÅÅ=’–µM—…•πú)ÕÕï…–µç¥Ä†ë1MQa%Q=ÄµïƒÄ¿§ÄùMç…•¡—ïêÅµïπ‘Åï·•–ÅçΩµ¡±ï—ïÃÅ›•—°Ω’–Å…ïÖë•πúÅ¡•¡ïêÅçΩπÕΩ±îÅ•π¡’–ú)ÕÕï…–µç¥Ä†ëÕç…•¡—ïë·•–ÄµµÖ—ç†Äù·•–ú§ÄùMç…•¡—ïêÅπÖŸ•ùÖ—•Ω∏Å…ïπëï…ÃÅ—°îÅ·•–ÅÖç—•Ω∏ú((åÅ·ï…ç•ÕîÅ—°îÅÖç—’Ö∞ÅëΩ’â±îµç±•ç¨Åïπ—…‰Åô•±îÄ°5Ω	P§∞ÅπΩ–Å©’Õ–Å4π¡Ãƒ∏)A’Õ†µ1ΩçÖ—•Ω∏Äë…ΩΩ–)—…‰ÅÏ(ÄÄÄÄëâÖ—Yï…Õ•Ω∏ÄÙÄòÄëïπÿÈΩµM¡ïåÄΩêÄΩåÄù4πâÖ–ÄµYï…Õ•Ω∏úÄ»¯òƒÅÅ=’–µM—…•πú(ÄÄÄÄëâÖ—Yï…Õ•Ωπ·•–ÄÙÄë1MQa%Q=(ÄÄÄÅÕÕï…–µç¥Ä†ëâÖ—Yï…Õ•Ωπ·•–ÄµïƒÄ¿§Äù4πâÖ–ÅŸï…Õ•Ω∏Å±Ö’πç†Åï·•—ÃÅÕ’ççïÕÕô’±±‰ú(ÄÄÄÅÕÕï…–µç¥Ä†ëâÖ—Yï…Õ•Ω∏πQ…•¥†§ÄµïƒÄâ•±îÅΩπ—…Ω∞Å5ÖπÖùï»ÅÿëŸï…Õ•Ω∏à§Äù4πâÖ–Å…ïÕΩ±ŸïÃÅ—°îÅçΩ……ïç–ÅŸï…Õ•Ω∏ú((ÄÄÄÄë±ïùÖçÂ1Ö’πç°ï…Yï…Õ•Ω∏ÄÙÄòÄëïπÿÈΩµM¡ïåÄΩêÄΩåÄù1Ö’πç†µ4πçµêÄµYï…Õ•Ω∏úÄ»¯òƒÅÅ=’–µM—…•πú(ÄÄÄÄë±ïùÖçÂ1Ö’πç°ï…·•–ÄÙÄë1MQa%Q=(ÄÄÄÅÕÕï…–µç¥Ä†ë±ïùÖçÂ1Ö’πç°ï…·•–ÄµïƒÄ¿§Äù1Ö’πç†µ4πçµêÅôΩ…›Ö…ëÃÅ—ºÅ—°îÅç’……ïπ–ÅAΩ›ï…M°ï±∞Å±Ö’πç°ï»ú(ÄÄÄÅÕÕï…–µç¥Ä†ë±ïùÖçÂ1Ö’πç°ï…Yï…Õ•Ω∏πQ…•¥†§ÄµïƒÄâ•±îÅΩπ—…Ω∞Å5ÖπÖùï»ÅÿëŸï…Õ•Ω∏à§Äù1ïùÖç‰Å±Ö’πç°ï»Å…ï¡Ω…—ÃÅ—°îÅç’……ïπ–ÅŸï…Õ•Ω∏ú((ÄÄÄÄëâÖ—ÖÕ°âΩÖ…êÄÙÄòÄëïπÿÈΩµM¡ïåÄΩêÄΩåÄù4πâÖ–ÄµMµΩ≠ïQïÕ–úÄ»¯òƒÅÅ=’–µM—…•πú(ÄÄÄÄëâÖ—ÖÕ°âΩÖ…ë·•–ÄÙÄë1MQa%Q=(ÄÄÄÅ•òÄ†ëâÖ—ÖÕ°âΩÖ…ë·•–ÄµπîÄ¿§ÅÏÅ]…•—îµ!ΩÕ–Ä†ù4πâÖ–ÅÕµΩ≠îÅΩ’—¡’–ËÄúÄ¨ÄëâÖ—ÖÕ°âΩÖ…ê§ÅÙ(ÄÄÄÅÕÕï…–µç¥Ä†ëâÖ—ÖÕ°âΩÖ…ë·•–ÄµïƒÄ¿§Äù4πâÖ–Å…ïπëï…ÃÅ—°îÅëÖÕ°âΩÖ…êÅÖπêÅï·•—Ãú)ÕÕï…–µç¥Ä†ëâÖ—ÖÕ°âΩÖ…êÄµçµÖ—ç†Äù•±îÅΩπ—…Ω∞Å5ÖπÖùï»ú§Äù4πâÖ–Å±Ö’πç°ïÃÅ—°îÅAΩ›ï…M°ï±∞ÅëÖÕ°âΩÖ…êú)Ù)ô•πÖ±±‰ÅÏ(ÄÄÄÅAΩ¿µ1ΩçÖ—•Ω∏)Ù()]…•—îµ!ΩÕ–Äù±∞Å4Å±Ö’πç°ï»Åç°ïç≠ÃÅ¡ÖÕÕïê∏ú(

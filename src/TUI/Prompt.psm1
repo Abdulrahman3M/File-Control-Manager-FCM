@@ -13,7 +13,7 @@ function Read-FcmValidatedInput {
     $errorText = ''
     while ($true) {
         $lines = @(
-            @{ Text = '  '; Role = 'Title'; IconName = 'App'; Suffix = '  FILE CONTROL MANAGER' },
+            @{ Text = '  '; Role = 'Title'; IconName = 'App'; Suffix = '  File Control Manager' },
             @{ Text = ('  ' + $Title); Role = 'Heading' },
             @{ Text = ('  ' + $Prompt); Role = 'Normal' },
             @{ Text = ('  ' + $Help); Role = 'Dim' }

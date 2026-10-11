@@ -34,7 +34,7 @@ function Show-FcmNotice {
     )
     $icon = Get-FcmIcon $Kind
     $lines = New-Object 'System.Collections.Generic.List[object]'
-    $lines.Add(@{ Text = '  '; Role = 'Title'; IconName = 'App'; Suffix = '  FILE CONTROL MANAGER' })
+    $lines.Add(@{ Text = '  '; Role = 'Title'; IconName = 'App'; Suffix = '  File Control Manager' })
     $lines.Add(@{ Text = ('  ' + $Title); Role = 'Heading' })
     $lines.Add(@{ Text = '  '; Role = 'Normal' })
     $lines.Add(@{ Text = '  '; Role = $Kind; IconName = $Kind; Suffix = '  ' + $Message })

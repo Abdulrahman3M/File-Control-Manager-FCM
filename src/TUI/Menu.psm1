@@ -11,8 +11,8 @@ function Show-FcmMenu {
         [Parameter(Mandatory = $true)][object[]]$Items,
         [int]$SelectedIndex = 0,
         [string]$Status = '',
-        [string]$AppVersion = '3.1.0',
-        [string]$ModeLabel = 'ADMINISTRATOR SESSION',
+        [string]$AppVersion = '3.2.0',
+        [string]$ModeLabel = 'Administrator Session',
         [string]$Target = '(not selected)',
         [switch]$Static
     )
@@ -23,12 +23,12 @@ function Show-FcmMenu {
     while ($true) {
         $size = Get-FcmTerminalSize
         $lines = New-Object 'System.Collections.Generic.List[object]'
-        $lines.Add((New-FcmMenuLine '  ' 'Title' 'App' ('  FILE CONTROL MANAGER  (v' + $AppVersion + ')')))
+        $lines.Add((New-FcmMenuLine '  ' 'Title' 'App' ('  File Control Manager  (v' + $AppVersion + ')')))
         $lines.Add((New-FcmMenuLine ('  ' + $Title + '  |  ' + $Context) 'Dim'))
         $lines.Add((New-FcmMenuLine '  ' 'Info' 'Admin' ('  ' + $ModeLabel)))
-        $lines.Add((New-FcmMenuLine ('  TARGET  ' + $Target) 'Normal'))
+        $lines.Add((New-FcmMenuLine ('  Target  ' + $Target) 'Normal'))
         $lines.Add((New-FcmMenuLine ('  ' + ('-' * [Math]::Min(72,$size.Width - 4))) 'Border'))
-        $lines.Add((New-FcmMenuLine '  ACTIONS' 'Heading'))
+        $lines.Add((New-FcmMenuLine '  Actions' 'Heading'))
 
         $rowBudget = [Math]::Max(3,$size.Height - 12)
         $first = 0

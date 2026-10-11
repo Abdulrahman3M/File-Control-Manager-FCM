@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.0 — 2026-10-11
+- Changed all-uppercase dashboard headings and session labels to readable Title Case, including the application name, target, actions, and diagnostic mode.
+- Updated startup regression checks to prevent all-uppercase display headings from returning.
+
 ## 3.1.1 — 2026-10-11
 - Fixed a PowerShell 5.1 parameter-binding failure when rendering lines without an icon while colors are enabled.
 - Added a regression check for colored rendering of ordinary text lines.

@@ -73,7 +73,7 @@ $items = @(
     @{ Id = 'second'; Label = 'Second action'; Icon = 'Search'; Description = 'Second description.'; Disabled = $false }
 )
 Set-FcmScriptedInput -Token @('01')
-$choice = Show-FcmMenu -Title 'Test' -Items $items -Status 'Ready' -AppVersion '3.1.1' -ModeLabel 'ADMINISTRATOR SESSION'
+$choice = Show-FcmMenu -Title 'Test' -Items $items -Status 'Ready' -AppVersion '3.2.0' -ModeLabel 'Administrator Session'
 Assert-FcmTest ($choice -eq 'first') 'Zero-padded numeric shortcut selects the intended row'
 
 Set-FcmScriptedInput -Token @('1','ENTER')

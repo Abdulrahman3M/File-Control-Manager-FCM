@@ -53,8 +53,11 @@ finally {
 }
 if ($menuExitCode -ne 0) { Write-Host ('FCM dashboard smoke output: ' + $menuOutput) }
 Assert-Fcm ($menuExitCode -eq 0) 'PowerShell renders the native dashboard without hanging'
-Assert-Fcm ($menuOutput -match 'FILE CONTROL MANAGER') 'The terminal interface renders its dashboard'
-Assert-Fcm ($menuOutput -match 'DIAGNOSTIC') 'SmokeTest identifies its non-elevated diagnostic mode'
+Assert-Fcm ($menuOutput -cmatch 'File Control Manager') 'The terminal interface renders its dashboard'
+Assert-Fcm ($menuOutput -cmatch ("File Control Manager\s+\(v" + [regex]::Escape($version) + "\)")) 'The application heading uses Title Case and the current version'
+Assert-Fcm ($menuOutput -cmatch '  Actions' -and $menuOutput -cmatch '  Target') 'Dashboard section headings use Title Case'
+Assert-Fcm ($menuOutput -cmatch 'Diagnostic Mode') 'SmokeTest labels its diagnostic mode in Title Case'
+Assert-Fcm ($menuOutput -cnotmatch 'FILE CONTROL MANAGER|ADMINISTRATOR SESSION|STANDARD USER|DIAGNOSTIC MODE|  TARGET |  ACTIONS') 'The dashboard contains no legacy all-uppercase display headings'
 foreach ($label in @('Choose file or folder','Inspect metadata, ACL and EFS status','Rename','Copy','Move','Permanently delete','Take ownership','Grant Administrators Full Control','Open Administrator session','View activity logs','Exit')) {
     Assert-Fcm ($menuOutput -match [regex]::Escape($label)) ('The dashboard keeps the "' + $label + '" action')
 }
@@ -80,7 +83,7 @@ try {
     $batDashboardExit = $LASTEXITCODE
     if ($batDashboardExit -ne 0) { Write-Host ('FCM.bat smoke output: ' + $batDashboard) }
     Assert-Fcm ($batDashboardExit -eq 0) 'FCM.bat renders the dashboard and exits'
-    Assert-Fcm ($batDashboard -match 'FILE CONTROL MANAGER') 'FCM.bat launches the PowerShell dashboard'
+Assert-Fcm ($batDashboard -cmatch 'File Control Manager') 'FCM.bat launches the PowerShell dashboard'
 }
 finally {
     Pop-Location
