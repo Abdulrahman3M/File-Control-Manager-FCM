@@ -1,30 +1,58 @@
-# File Control Manager (FCM) v2.1.1
+# File Control Manager (FCM) v3.0.0
 
-Terminal-based file and folder manager for Windows, inspired by the FFmpeg User Manager terminal layout.
+FCM is a PowerShell-only, keyboard-first terminal file and folder manager. It runs inside PowerShell or Windows Terminal and uses native PowerShell file operations plus Windows security utilities. It has no Python or third-party runtime dependency.
 
-**Requirements:** Windows 10/11, Python 3.9+, PowerShell 5.1 / 6 / 7.
+## Requirements and startup
 
-**Start:** double-click `FCM.bat`, or run `./FCM.ps1` in PowerShell.
+- Windows 10 or 11
+- Windows PowerShell 5.1 or PowerShell 7 (PowerShell 6 is supported by the code but is not in the automated test matrix)
+- Windows utilities `icacls.exe`, `cipher.exe`, and `takeown.exe`
+- Windows Terminal is recommended; the classic PowerShell console is also supported
 
-Features: a colored terminal dashboard, file metadata and `icacls` ACL inspection, `cipher` EFS status checks, copying, moving, renaming, confirmed permanent deletion, ownership recovery, administrator ACL grants, elevation, and JSONL audit logs in LocalAppData.
+Start `FCM.bat` or run `./FCM.ps1` from PowerShell. FCM checks Windows, PowerShell, required files, and utilities before showing the normal interface. If checks pass and the current session is not elevated, Windows presents its standard UAC prompt. Approval starts the TUI in the elevated PowerShell process. Canceling UAC closes FCM without running an action. FCM does not change system execution policy.
 
-ACLs are access permissions, not encryption. FCM does not decrypt EFS or BitLocker, bypass Windows security controls, or forcibly unlock active process handles. Ownership and ACL changes always require confirmation.
+```powershell
+./FCM.ps1 -Version
+./FCM.ps1 -SelfTest
+./FCM.ps1 -SmokeTest
+```
 
-Tests: `python -m unittest discover -s tests -v`. Windows launcher checks: `./tests/Test-FcmStartup.ps1` (requires Python 3.9+). A Windows GitHub Actions workflow runs startup checks under PowerShell 5.1 and PowerShell 7. PowerShell 6 compatibility is not verified.
+`-SelfTest` and `-SmokeTest` are non-elevating diagnostics. `-SmokeTest` renders the real dashboard once and exits. Normal interactive use requires a terminal.
 
-`VERSION` is the authoritative version file, to be synchronized with README and CHANGELOG.
+## Interface
 
+The dashboard displays the application version, administrator mode, selected target, available actions, contextual help, and status. Use Up/Down and Enter, or type an action number such as `01` or `11`. Esc backs out; Ctrl+C exits. Path and filename prompts support typing, paste, navigation keys, Backspace, Delete, and Ctrl+U.
 
-### Administrator permissions and security warnings
-FCM displays a consent menu before requesting administrator privileges. Windows UAC remains active. Windows SmartScreen or downloaded-file warnings are separate and cannot be removed by the app; signing and trusted distribution are recommended. The TUI supports ANSI colors when the terminal allows them and emoji/symbol/ASCII glyph fallback. Check the Windows Actions workflow for the latest runtime verification status.
+FCM uses semantic console colors and selects Emoji, Windows console symbols, or ASCII icons according to the terminal. Set `FCM_ICONS=emoji`, `FCM_ICONS=symbol`, or `FCM_ICONS=ascii` to choose explicitly. Set `NO_COLOR` to disable colors. Redirected output uses readable ASCII icons.
 
+## Actions
 
-### Startup troubleshooting (v2.1.1)
-- The error `Cannot convert value "System.String" to type "System.Management.Automation.SwitchParameter"` occurred because PowerShell treated `$Version` and `$version` as the same variable. The version string now uses `$appVersion`.
-- The Python launcher `py.exe` accepts `-3`; `python.exe` does not. FCM detects the runtime and validates Python 3.9+ before opening the interface.
-- To verify startup without opening the UI: `./FCM.ps1 -Version` and `./FCM.ps1 -SelfTest`; to test the dashboard without input: `./FCM.ps1 -SmokeTest`.
-- To run without the initial administrator prompt (e.g. in automated smoke tests): `./FCM.ps1 -SkipAdminPrompt`. ACL modification commands still require administrator privileges.
-- Windows PowerShell 5.1 / PowerShell 7 startup is exercised in GitHub Actions with `-SmokeTest`; PowerShell 6 remains UNVERIFIED unless separately tested.
+1. Choose a file or folder.
+2. Inspect metadata, Windows ACLs, and EFS status.
+3. Rename without overwriting.
+4. Copy to an existing destination folder.
+5. Move to an existing destination folder.
+6. Permanently delete after confirmation and typing `DELETE`.
+7. Take ownership.
+8. Grant the local Administrators group Full Control.
+9. Open another Administrator FCM session.
+10. View recent activity logs.
+11. Exit.
 
-- For redirected console output, FCM emits UTF-8 with a plain ASCII dashboard fallback; it does not require emoji-capable fonts.
-- If standard input ends unexpectedly, the terminal menu now exits cleanly instead of showing a Python traceback.
+Copy, move, and rename refuse existing destination names. Activity is recorded as JSON Lines under the current user's LocalAppData folder. Security changes require a second explicit confirmation after UAC. ACLs control access; they are not encryption. FCM does not decrypt EFS or BitLocker, bypass Windows security controls, or forcibly unlock active file handles.
+
+## Checks
+
+Run these from PowerShell 5.1 or 7:
+
+```powershell
+./tests/Test-TuiModules.ps1
+./tests/Test-Operations.ps1
+./tests/Test-FcmStartup.ps1
+```
+
+GitHub Actions runs the same checks on Windows PowerShell 5.1 and PowerShell 7. Automated checks cannot approve/cancel a real UAC prompt or guarantee a particular font's Emoji rendering; PowerShell 6 also remains outside the CI matrix.
+
+## Version and license
+
+`VERSION` is authoritative. See `CHANGELOG.md` for user-facing changes. FCM is provided under `LICENSE`.

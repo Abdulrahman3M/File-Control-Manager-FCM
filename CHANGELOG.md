@@ -1,24 +1,30 @@
 # Changelog
 
-## 2.1.1 — 2026-10-10
-- Fixed fatal startup crash caused by case-insensitive PowerShell variable collision between `$Version` (switch) and `$version` (string).
-- Corrected Python runtime detection and prevented passing the `py.exe`-specific `-3` flag to `python.exe`.
-- Allowed zero-padded menu selections, matching displayed entries (`01`, `02`, etc.).
-- Added `-SelfTest`, `-SmokeTest`, and `-SkipAdminPrompt` launcher options for unattended checks.
-- Fixed Windows redirected-output UnicodeEncodeError and avoided a console-input EOF traceback.
-- Added Windows PowerShell 5.1 and PowerShell 7 GitHub Actions startup test matrix.
-- Windows runtime status depends on CI results; PowerShell 6 remains unverified.
+## 3.0.0 — 2026-10-10
+- Replaced the Python operation backend with native PowerShell file operations and Windows security tools; removed Python runtime and test dependencies.
+- Added startup preflight diagnostics for Windows, PowerShell, required project files, and Windows utilities.
+- Normal interactive startup now requests standard Windows UAC elevation after preflight; canceling closes FCM without starting an operation.
+- Replaced the legacy Windows Forms entry point with a compatibility forwarder to the PowerShell TUI.
+- Updated the dashboard header, administrator status, and action guidance to match elevated startup behavior.
+- Preserved explicit confirmation for permanent deletion and security changes, plus protected-root and destination-collision checks.
 
+## 2.2.1 — 2026-10-10
+- Fixed path entry dropping numeric characters because the keyboard layer classified digits separately from ordinary text.
+- Added a regression check for paths with numbered folders and digit-containing names.
+
+## 2.2.0 — 2026-10-10
+- Rebuilt the terminal interface as focused PowerShell TUI modules with arrow/Enter navigation and retained numeric shortcuts.
+- Added semantic color roles, terminal-aware Emoji/Symbol/ASCII icon fallback, responsive menu rendering, contextual help, and editable prompts.
+- Used a separate Python JSON backend before the PowerShell-only 3.0.0 migration.
+
+## 2.1.1 — 2026-10-10
+- Fixed startup variable collision, Python runtime detection, numeric shortcut parsing, and redirected-output handling.
+- Added `-SelfTest`, `-SmokeTest`, and Windows PowerShell 5.1 / PowerShell 7 startup checks.
 
 ## 2.1.0 — 2026-10-10
-- Colorized terminal dashboard and selectable icon tiers with symbol/ASCII fallback.
-- Added explicit administrator consent screen before Windows UAC elevation.
-- Preserved Windows security warnings; no security bypasses or automatic policy changes.
-- Windows runtime validation pending.
+- Added a colorized terminal dashboard and selectable icon tiers with symbol/ASCII fallback.
+- Added explicit administrator consent before Windows UAC elevation.
 
 ## 2.0.0 — 2026-10-10
-- Replaced Windows Forms GUI with a Python-backed PowerShell terminal dashboard.
-- Added FCM.bat launcher and FCM.ps1 PowerShell entry point.
-- Added file inspection, copy, rename, move, confirmed deletion, ACL inspection and repair.
-- Added EFS status diagnostics, structured activity logs, VERSION and unit tests.
-- Windows runtime compatibility remains to be validated.
+- Replaced the original Windows Forms GUI with a Python-backed PowerShell terminal dashboard.
+- Added file inspection, copy, rename, move, confirmed deletion, ACL inspection and repair, EFS diagnostics, structured activity logs, and launcher.
