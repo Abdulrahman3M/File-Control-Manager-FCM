@@ -1,4 +1,4 @@
-# File Control Manager (FCM) v3.1.0
+# File Control Manager (FCM) v3.1.1
 
 FCM is a PowerShell-only, keyboard-first terminal file and folder manager. It runs inside PowerShell or Windows Terminal and uses native PowerShell file operations plus Windows security utilities. It has no Python or third-party runtime dependency.
 

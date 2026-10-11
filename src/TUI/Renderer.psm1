@@ -95,7 +95,7 @@ function Write-FcmScreen {
         if ($iconName) { $icon = Get-FcmIcon $iconName }
         $iconStyle = Get-FcmStyle 'Accent'
         $iconColor = $null
-        if ($iconStyle.Foreground) { $iconColor = Get-FcmIconColor $iconName }
+        if ($icon -and $iconStyle.Foreground) { $iconColor = Get-FcmIconColor $iconName }
         Write-FcmSegment -Text ([string]$item.Text) -Foreground $style.Foreground -Background $style.Background
         if ($icon) {
             Write-FcmSegment -Text $icon -Foreground $iconColor -Background $style.Background

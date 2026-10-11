@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.1 — 2026-10-11
+- Fixed a PowerShell 5.1 parameter-binding failure when rendering lines without an icon while colors are enabled.
+- Added a regression check for colored rendering of ordinary text lines.
+
 ## 3.1.0 — 2026-10-11
 - Elevated startup now opens a dedicated Windows Terminal window running the same PowerShell executable and FCM command; the classic console remains available when Windows Terminal is missing.
 - Elevated follow-up actions also open in Windows Terminal, with their selected target and operation preserved.
