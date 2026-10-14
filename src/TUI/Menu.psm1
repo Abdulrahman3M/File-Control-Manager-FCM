@@ -11,7 +11,7 @@ function Show-FcmMenu {
         [Parameter(Mandatory = $true)][object[]]$Items,
         [int]$SelectedIndex = 0,
         [string]$Status = '',
-        [string]$AppVersion = '3.2.0',
+        [string]$AppVersion = '3.2.2',
         [string]$ModeLabel = 'Administrator Session',
         [string]$Target = '(not selected)',
         [switch]$Static

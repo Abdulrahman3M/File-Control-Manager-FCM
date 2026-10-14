@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.2.2 — 2026-10-14
+- Wrapped the first full-screen draw and resize redraw in a Windows Terminal synchronized VT update to prevent the initial row-by-row reveal that caused a one-time startup flicker.
+- Kept the existing changed-row navigation renderer and compatible redraw fallbacks for other terminal hosts.
+- Added renderer regression coverage for the synchronized frame controls, row painting, style preservation, and the initial full-redraw path.
+
 ## 3.2.1 — 2026-10-14
 - Replaced per-key Clear-Host screen refresh with centralized, style-aware changed-row in-place rendering to reduce menu flicker. Added ANSI VT detection, terminal-resize cache invalidation and non-ANSI legacy line-padding fallback.
 - Preserved semantic icon colors, Emoji/Symbol/ASCII fallbacks, muted help text, and the existing menu layout.

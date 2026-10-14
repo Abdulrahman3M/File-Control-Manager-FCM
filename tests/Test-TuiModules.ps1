@@ -73,7 +73,7 @@ $items = @(
     @{ Id = 'second'; Label = 'Second action'; Icon = 'Search'; Description = 'Second description.'; Disabled = $false }
 )
 Set-FcmScriptedInput -Token @('01')
-$choice = Show-FcmMenu -Title 'Test' -Items $items -Status 'Ready' -AppVersion '3.2.0' -ModeLabel 'ADMINISTRATOR SESSION'
+$choice = Show-FcmMenu -Title 'Test' -Items $items -Status 'Ready' -AppVersion '3.2.2' -ModeLabel 'ADMINISTRATOR SESSION'
 Assert-FcmTest ($choice -eq 'first') 'Zero-padded numeric shortcut selects the intended row'
 
 Set-FcmScriptedInput -Token @('1','ENTER')
@@ -115,4 +115,52 @@ Assert-FcmTest ($rendererSource -match 'SetCursorPosition' -and $rendererSource 
 Assert-FcmTest ($rendererSource -match 'FcmPlainOutput' -and $rendererSource -match 'Write-FcmStyledLine') 'Scripted and redirected output keeps the existing readable formatting'
 Assert-FcmTest ($rendererSource.Contains('FcmLastHeight') -and $rendererSource.Contains('FcmAnsi') -and $rendererSource.Contains('WindowWidth')) 'Renderer handles resize invalidation, VT detection and console-safe padding'
 Assert-FcmTest ($rendererSource.Contains('Get-FcmIconColor') -and $rendererSource.Contains('FcmLastStyleKeys')) 'Differential renderer retains independent icon colors and semantic style changes'
+$rendererModule = Get-Module -Name Renderer | Select-Object -First 1
+$hasSynchronizedFrameBuilder = $false
+if ($rendererModule) {
+    $hasSynchronizedFrameBuilder = [bool](& $rendererModule { $null -ne (Get-Command -Name Write-FcmSynchronizedFrame -ErrorAction SilentlyContinue) })
+}
+Assert-FcmTest $hasSynchronizedFrameBuilder 'Renderer can send the initial screen as one synchronized terminal frame'
+if ($hasSynchronizedFrameBuilder) {
+    $frameLines = @(
+        @{ Text = 'Heading'; Role = 'Title'; IconName = ''; Suffix = '' },
+        @{ Text = '  '; Role = 'Selected'; IconName = 'Folder'; Suffix = 'Choose' }
+    )
+    $frameWriter = New-Object System.IO.StringWriter
+    $frameText = & $rendererModule {
+        param($lines,$writer)
+        Write-FcmSynchronizedFrame -Line $lines -ClearScreen -OutputWriter $writer
+        return $writer.ToString()
+    } $frameLines $frameWriter
+    $escape = [string][char]27
+    Assert-FcmTest ($frameText.StartsWith($escape + '[?2026h') -and $frameText.EndsWith($escape + '[?2026l')) 'Initial screen output is bracketed by synchronized-update controls'
+    Assert-FcmTest ($frameText.Contains($escape + '[1;1H') -and $frameText.Contains($escape + '[2;1H') -and $frameText.Contains($escape + '[2J') -and $frameText.Contains($escape + '[K')) 'A single frame positions, clears, and paints each complete row'
+    Assert-FcmTest ($frameText.Contains($escape + '[96mHeading') -and $frameText.Contains($escape + '[93;44m') -and $frameText.Contains('Choose')) 'The synchronized frame preserves semantic and independent icon colors'
+
+    $originalConsoleWriter = [Console]::Out
+    $capturedConsoleWriter = New-Object System.IO.StringWriter
+    try {
+        [Console]::SetOut($capturedConsoleWriter)
+        & $rendererModule {
+            $script:FcmPlainOutput = $false
+            $script:FcmAnsi = $true
+            $script:FcmSynchronizedOutput = $true
+            $script:FcmFullRedraw = $true
+        }
+        Write-FcmScreen -Line $frameLines
+    }
+    finally {
+        [Console]::SetOut($originalConsoleWriter)
+        & $rendererModule {
+            $script:FcmSyncUpdateActive = $false
+            $script:FcmCursorHidden = $false
+            $script:FcmAnsi = $false
+            $script:FcmSynchronizedOutput = $false
+            Restore-FcmScreen
+        }
+    }
+    $capturedInteractiveFrame = $capturedConsoleWriter.ToString()
+    $capturedConsoleWriter.Dispose()
+    Assert-FcmTest ($capturedInteractiveFrame.StartsWith($escape + '[?2026h') -and $capturedInteractiveFrame.EndsWith($escape + '[?2026l') -and $capturedInteractiveFrame.Contains('Heading')) 'The first interactive redraw is written through the synchronized renderer path'
+}
 Write-Output 'All PowerShell TUI module checks passed.'
