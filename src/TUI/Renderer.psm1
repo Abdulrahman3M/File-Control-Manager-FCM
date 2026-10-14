@@ -2,6 +2,8 @@ $script:FcmPlainOutput = $false
 $script:FcmLastFrame = @()
 $script:FcmLastStyleKeys = @()
 $script:FcmLastWidth = 0
+$script:FcmLastHeight = 0
+$script:FcmAnsi = $false
 $script:FcmCursorHidden = $false
 
 function Initialize-FcmRenderer {
@@ -10,7 +12,16 @@ function Initialize-FcmRenderer {
     $script:FcmLastFrame = @()
     $script:FcmLastStyleKeys = @()
     $script:FcmLastWidth = 0
+    $script:FcmLastHeight = 0
+    $script:FcmAnsi = $false
     $script:FcmCursorHidden = $false
+    if (-not $script:FcmPlainOutput) {
+        try {
+            if (-not [Console]::IsOutputRedirected) {
+                $script:FcmAnsi = [bool]($env:WT_SESSION -or $env:TERM_PROGRAM -or $env:ConEmuANSI -eq 'ON' -or $Host.UI.SupportsVirtualTerminal)
+            }
+        } catch { $script:FcmAnsi = $false }
+    }
     try {
         [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
         [Console]::InputEncoding = New-Object System.Text.UTF8Encoding($false)
@@ -85,12 +96,16 @@ function Write-FcmSegment {
 function Restore-FcmScreen {
     # Return the terminal to its original cursor state on application shutdown.
     if ($script:FcmCursorHidden) {
+        if ($script:FcmAnsi) {
+            try { [Console]::Out.Write(([string][char]27) + '[?25h') } catch { }
+        }
         try { [Console]::CursorVisible = $true } catch { }
         $script:FcmCursorHidden = $false
     }
     $script:FcmLastFrame = @()
     $script:FcmLastStyleKeys = @()
     $script:FcmLastWidth = 0
+    $script:FcmLastHeight = 0
 }
 
 function Get-FcmRenderedLine {
@@ -138,14 +153,15 @@ function Write-FcmScreen {
         return
     }
 
-    # Paint only changed rows. Never blank the terminal between arrow-key presses.
+    # Paint only changed rows. Cache includes text and semantic/icon style keys.
+    # ANSI controls are emitted only to verified interactive VT-capable terminals.
     try {
         if (-not $script:FcmCursorHidden) {
             try { [Console]::CursorVisible = $false; $script:FcmCursorHidden = $true } catch { }
         }
         $current = @($visible | ForEach-Object { Get-FcmRenderedLine -Line $_ })
         $styles = @($visible | ForEach-Object { ([string]$_.Role + '|' + [string]$_.IconName) })
-        if ($script:FcmLastWidth -ne $size.Width) {
+        if ($script:FcmLastWidth -ne $size.Width -or $script:FcmLastHeight -ne $size.Height) {
             $script:FcmLastFrame = @()
             $script:FcmLastStyleKeys = @()
         }
@@ -156,19 +172,34 @@ function Write-FcmScreen {
             $oldStyle = if ($row -lt $script:FcmLastStyleKeys.Count) { [string]$script:FcmLastStyleKeys[$row] } else { $null }
             $newStyle = if ($row -lt $styles.Count) { [string]$styles[$row] } else { '' }
             if ($null -ne $oldText -and $newText -ceq $oldText -and $newStyle -ceq $oldStyle) { continue }
-            [Console]::SetCursorPosition(0,$row)
+            if ($row -ge $size.Height - 1) { continue }
+            if ($script:FcmAnsi) {
+                $escape = [string][char]27
+                [Console]::Out.Write($escape + '[' + ($row + 1) + ';1H')
+            } else {
+                [Console]::SetCursorPosition(0,$row)
+            }
             if ($row -lt $visible.Count) { Write-FcmStyledLine -Item $visible[$row] }
-            # Clear stale characters at the end without clearing the screen.
-            $escape = [string][char]27
-            [Console]::Out.Write($escape + '[K')
+            if ($script:FcmAnsi) {
+                # ANSI CSI K clears the old, longer row without blanking the frame.
+                [Console]::Out.Write(([string][char]27) + '[K')
+            } else {
+                # Legacy conhost has no VT erasure; pad to the last safe column.
+                $remaining = [Math]::Max(0, [Console]::WindowWidth - 1 - [Console]::CursorLeft)
+                if ($remaining -gt 0) { [Console]::Out.Write(' ' * $remaining) }
+            }
         }
         $script:FcmLastFrame = $current
         $script:FcmLastStyleKeys = $styles
         $script:FcmLastWidth = $size.Width
+        $script:FcmLastHeight = $size.Height
     }
     catch {
         # Older hosts may reject cursor positioning: safely return to the original renderer.
         $script:FcmLastFrame = @()
+        $script:FcmLastStyleKeys = @()
+        $script:FcmLastWidth = 0
+        $script:FcmLastHeight = 0
         try { Clear-Host } catch { }
         foreach ($item in $visible) {
             Write-FcmStyledLine -Item $item
