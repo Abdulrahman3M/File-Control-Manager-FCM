@@ -1,8 +1,12 @@
 $script:FcmPlainOutput = $false
+$script:FcmLastFrame = @()
+$script:FcmCursorHidden = $false
 
 function Initialize-FcmRenderer {
     param([switch]$PlainOutput)
     $script:FcmPlainOutput = [bool]$PlainOutput
+    $script:FcmLastFrame = @()
+    $script:FcmCursorHidden = $false
     try {
         [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
         [Console]::InputEncoding = New-Object System.Text.UTF8Encoding($false)
@@ -74,12 +78,40 @@ function Write-FcmSegment {
     else { Write-Host $Text -NoNewline }
 }
 
+function Restore-FcmScreen {
+    # Return the terminal to its original cursor state on application shutdown.
+    if ($script:FcmCursorHidden) {
+        try { [Console]::CursorVisible = $true } catch { }
+        $script:FcmCursorHidden = $false
+    }
+    $script:FcmLastFrame = @()
+}
+
+function Get-FcmRenderedLine {
+    param([object]$Line)
+    $icon = ''
+    if ([string]$Line.IconName) { $icon = Get-FcmIcon ([string]$Line.IconName) }
+    return ([string]$Line.Text + $icon + [string]$Line.Suffix)
+}
+
+function Write-FcmStyledLine {
+    param([object]$Item)
+    $style = Get-FcmStyle -Role $Item.Role
+    $iconName = [string]$Item.IconName
+    $icon = ''
+    if ($iconName) { $icon = Get-FcmIcon $iconName }
+    $iconColor = $null
+    if ($icon -and $style.Foreground) { $iconColor = Get-FcmIconColor $iconName }
+    Write-FcmSegment -Text ([string]$Item.Text) -Foreground $style.Foreground -Background $style.Background
+    if ($icon) {
+        Write-FcmSegment -Text $icon -Foreground $iconColor -Background $style.Background
+        Write-FcmSegment -Text ([string]$Item.Suffix) -Foreground $style.Foreground -Background $style.Background
+    }
+}
+
 function Write-FcmScreen {
     param([Parameter(Mandatory = $true)][object[]]$Line)
     $size = Get-FcmTerminalSize
-    if (-not $script:FcmPlainOutput) {
-        try { Clear-Host } catch { }
-    }
     $expanded = New-Object 'System.Collections.Generic.List[object]'
     foreach ($item in $Line) {
         Add-FcmWrappedText -Output $expanded -Line $item -Width $size.Width
@@ -87,22 +119,47 @@ function Write-FcmScreen {
     $maxLines = $size.Height - 1
     $start = 0
     if ($expanded.Count -gt $maxLines) { $start = $expanded.Count - $maxLines }
+    $visible = @()
     for ($index = $start; $index -lt $expanded.Count; $index++) {
-        $item = $expanded[$index]
-        $style = Get-FcmStyle -Role $item.Role
-        $iconName = [string]$item.IconName
-        $icon = ''
-        if ($iconName) { $icon = Get-FcmIcon $iconName }
-        $iconStyle = Get-FcmStyle 'Accent'
-        $iconColor = $null
-        if ($icon -and $iconStyle.Foreground) { $iconColor = Get-FcmIconColor $iconName }
-        Write-FcmSegment -Text ([string]$item.Text) -Foreground $style.Foreground -Background $style.Background
-        if ($icon) {
-            Write-FcmSegment -Text $icon -Foreground $iconColor -Background $style.Background
-            Write-FcmSegment -Text ([string]$item.Suffix) -Foreground $style.Foreground -Background $style.Background
+        $visible += ,$expanded[$index]
+    }
+
+    if ($script:FcmPlainOutput) {
+        foreach ($item in $visible) {
+            Write-FcmStyledLine -Item $item
+            Write-Host
         }
-        Write-Host
+        return
+    }
+
+    # Paint only changed rows. Never blank the terminal between arrow-key presses.
+    try {
+        if (-not $script:FcmCursorHidden) {
+            try { [Console]::CursorVisible = $false; $script:FcmCursorHidden = $true } catch { }
+        }
+        $current = @($visible | ForEach-Object { Get-FcmRenderedLine -Line $_ })
+        $rows = [Math]::Max($current.Count, $script:FcmLastFrame.Count)
+        for ($row = 0; $row -lt $rows; $row++) {
+            $newText = if ($row -lt $current.Count) { [string]$current[$row] } else { '' }
+            $oldText = if ($row -lt $script:FcmLastFrame.Count) { [string]$script:FcmLastFrame[$row] } else { $null }
+            if ($null -ne $oldText -and $newText -ceq $oldText) { continue }
+            [Console]::SetCursorPosition(0,$row)
+            if ($row -lt $visible.Count) { Write-FcmStyledLine -Item $visible[$row] }
+            # Clear stale characters at the end without clearing the screen.
+            $escape = [string][char]27
+            [Console]::Out.Write($escape + '[K')
+        }
+        $script:FcmLastFrame = $current
+    }
+    catch {
+        # Older hosts may reject cursor positioning: safely return to the original renderer.
+        $script:FcmLastFrame = @()
+        try { Clear-Host } catch { }
+        foreach ($item in $visible) {
+            Write-FcmStyledLine -Item $item
+            Write-Host
+        }
     }
 }
 
-Export-ModuleMember -Function Initialize-FcmRenderer,Get-FcmTerminalSize,Write-FcmScreen
+Export-ModuleMember -Function Initialize-FcmRenderer,Get-FcmTerminalSize,Write-FcmScreen,Restore-FcmScreen

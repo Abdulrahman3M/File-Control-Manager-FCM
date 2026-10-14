@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.2.1 — 2026-10-14
+- Replaced per-key Clear-Host screen refresh with changed-row in-place rendering to reduce menu flicker.
+- Preserved semantic icon colors, Emoji/Symbol/ASCII fallbacks, muted help text, and the existing menu layout.
+- Kept plain/redirected diagnostic output compatible with existing smoke tests.
+
+
 ## 3.2.0 — 2026-10-11
 - Changed all-uppercase dashboard headings and session labels to readable Title Case, including the application name, target, actions, and diagnostic mode.
 - Updated startup regression checks to prevent all-uppercase display headings from returning.
