@@ -1,4 +1,4 @@
-# File Control Manager (FCM) v3.2.1
+# File Control Manager (FCM) v3.2.2
 
 FCM is a PowerShell-only, keyboard-first terminal file and folder manager. It runs inside PowerShell or Windows Terminal and uses native PowerShell file operations plus Windows security utilities. It has no Python or third-party runtime dependency.
 
@@ -21,7 +21,7 @@ Start `FCM.bat` or run `./FCM.ps1` from PowerShell. FCM checks Windows, PowerShe
 
 ## Interface
 
-Menu navigation uses centralized changed-row in-place rendering: ordinary arrow presses do not clear and repaint the complete terminal. VT-capable interactive consoles use ANSI positioning and trailing-line erasure; classic consoles use safe cursor positioning plus padding. Width/height changes invalidate the renderer cache. Semantic colors, independent icon colors, Emoji/Symbol/ASCII fallbacks, and dim descriptions are preserved.
+Menu navigation uses centralized changed-row in-place rendering: ordinary arrow presses do not clear and repaint the complete terminal. On Windows Terminal, the initial full frame and resize redraw are sent as a synchronized VT update so the terminal presents the completed frame together instead of revealing a row-by-row startup paint. Other VT terminals and classic consoles retain their compatible redraw paths. Arrow navigation remains differential. Width/height changes invalidate the renderer cache. Semantic colors, independent icon colors, Emoji/Symbol/ASCII fallbacks, and dim descriptions are preserved.
 
 The dashboard displays the application version, administrator mode, selected target, available actions, contextual help, and status. Use Up/Down and Enter, or type an action number such as `01` or `11`. Esc backs out; Ctrl+C exits. Path and filename prompts support typing, paste, navigation keys, Backspace, Delete, and Ctrl+U.
 

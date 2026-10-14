@@ -4,6 +4,8 @@ $script:FcmLastStyleKeys = @()
 $script:FcmLastWidth = 0
 $script:FcmLastHeight = 0
 $script:FcmAnsi = $false
+$script:FcmSynchronizedOutput = $false
+$script:FcmSyncUpdateActive = $false
 $script:FcmFullRedraw = $true
 $script:FcmCursorHidden = $false
 
@@ -15,6 +17,8 @@ function Initialize-FcmRenderer {
     $script:FcmLastWidth = 0
     $script:FcmLastHeight = 0
     $script:FcmAnsi = $false
+    $script:FcmSynchronizedOutput = $false
+    $script:FcmSyncUpdateActive = $false
     $script:FcmFullRedraw = $true
     $script:FcmCursorHidden = $false
     if (-not $script:FcmPlainOutput) {
@@ -24,6 +28,7 @@ function Initialize-FcmRenderer {
             }
         } catch { $script:FcmAnsi = $false }
     }
+    $script:FcmSynchronizedOutput = $script:FcmAnsi -and [bool]$env:WT_SESSION
     try {
         [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
         [Console]::InputEncoding = New-Object System.Text.UTF8Encoding($false)
@@ -97,6 +102,16 @@ function Write-FcmSegment {
 
 function Restore-FcmScreen {
     # Return the terminal to its original cursor state on application shutdown.
+    if ($script:FcmSyncUpdateActive) {
+        if ($script:FcmAnsi) {
+            try {
+                [Console]::Out.Write(([string][char]27) + '[?2026l')
+                [Console]::Out.Flush()
+            }
+            catch { }
+        }
+        $script:FcmSyncUpdateActive = $false
+    }
     if ($script:FcmCursorHidden) {
         if ($script:FcmAnsi) {
             try { [Console]::Out.Write(([string][char]27) + '[?25h') } catch { }
@@ -131,6 +146,80 @@ function Write-FcmStyledLine {
         Write-FcmSegment -Text $icon -Foreground $iconColor -Background $style.Background
         Write-FcmSegment -Text ([string]$Item.Suffix) -Foreground $style.Foreground -Background $style.Background
     }
+}
+
+function Get-FcmAnsiColorCode {
+    param([string]$Color,[switch]$Background)
+    $foregroundCodes = @{
+        Black = 30; DarkRed = 31; DarkGreen = 32; DarkYellow = 33; DarkBlue = 34; DarkMagenta = 35; DarkCyan = 36; Gray = 37
+        DarkGray = 90; Red = 91; Green = 92; Yellow = 93; Blue = 94; Magenta = 95; Cyan = 96; White = 97
+    }
+    if (-not $Color -or -not $foregroundCodes.ContainsKey($Color)) { return $null }
+    $code = [int]$foregroundCodes[$Color]
+    if ($Background) { return ($code + 10) }
+    return $code
+}
+
+function Get-FcmAnsiStyleSequence {
+    param([string]$Foreground,[string]$Background)
+    $codes = New-Object 'System.Collections.Generic.List[int]'
+    $foregroundCode = Get-FcmAnsiColorCode -Color $Foreground
+    $backgroundCode = Get-FcmAnsiColorCode -Color $Background -Background
+    if ($null -ne $foregroundCode) { $codes.Add([int]$foregroundCode) }
+    if ($null -ne $backgroundCode) { $codes.Add([int]$backgroundCode) }
+    if ($codes.Count -eq 0) { return ([string][char]27 + '[0m') }
+    return ([string][char]27 + '[' + ($codes -join ';') + 'm')
+}
+
+function New-FcmSynchronizedFrame {
+    param([Parameter(Mandatory = $true)][object[]]$Line,[switch]$ClearScreen)
+    $escape = [string][char]27
+    $builder = New-Object System.Text.StringBuilder
+    [void]$builder.Append($escape + '[?2026h')
+    [void]$builder.Append($escape + '[?25l')
+    if ($ClearScreen) { [void]$builder.Append($escape + '[2J') }
+    for ($row = 0; $row -lt $Line.Count; $row++) {
+        $item = $Line[$row]
+        $roleStyle = Get-FcmStyle -Role ([string]$item.Role)
+        $text = [string]$item.Text
+        $iconName = [string]$item.IconName
+        $icon = ''
+        if ($iconName) { $icon = Get-FcmIcon $iconName }
+        $suffix = [string]$item.Suffix
+        $iconForeground = $null
+        if ($icon -and $roleStyle.Foreground) { $iconForeground = Get-FcmIconColor $iconName }
+
+        [void]$builder.Append($escape + '[' + ($row + 1) + ';1H')
+        [void]$builder.Append((Get-FcmAnsiStyleSequence -Foreground $roleStyle.Foreground -Background $roleStyle.Background))
+        [void]$builder.Append($text).Append($escape + '[0m')
+        if ($icon) {
+            [void]$builder.Append((Get-FcmAnsiStyleSequence -Foreground $iconForeground -Background $roleStyle.Background))
+            [void]$builder.Append($icon).Append($escape + '[0m')
+        }
+        [void]$builder.Append((Get-FcmAnsiStyleSequence -Foreground $roleStyle.Foreground -Background $roleStyle.Background))
+        [void]$builder.Append($suffix).Append($escape + '[0m')
+        [void]$builder.Append($escape + '[K')
+    }
+    [void]$builder.Append($escape + '[?2026l')
+    return $builder.ToString()
+}
+
+function Write-FcmSynchronizedFrame {
+    param(
+        [Parameter(Mandatory = $true)][object[]]$Line,
+        [switch]$ClearScreen,
+        [System.IO.TextWriter]$OutputWriter = $null
+    )
+    if ($null -eq $OutputWriter) { $OutputWriter = [Console]::Out }
+    $isConsoleWriter = [object]::ReferenceEquals($OutputWriter,[Console]::Out)
+    $frame = New-FcmSynchronizedFrame -Line $Line -ClearScreen:$ClearScreen
+    if ($isConsoleWriter) {
+        $script:FcmCursorHidden = $true
+        $script:FcmSyncUpdateActive = $true
+    }
+    $OutputWriter.Write($frame)
+    $OutputWriter.Flush()
+    if ($isConsoleWriter) { $script:FcmSyncUpdateActive = $false }
 }
 
 function Write-FcmScreen {
@@ -170,6 +259,15 @@ function Write-FcmScreen {
             $script:FcmFullRedraw = $true
         }
         if ($script:FcmFullRedraw) {
+            if ($script:FcmSynchronizedOutput) {
+                Write-FcmSynchronizedFrame -Line $visible -ClearScreen
+                $script:FcmFullRedraw = $false
+                $script:FcmLastFrame = $current
+                $script:FcmLastStyleKeys = $styles
+                $script:FcmLastWidth = $size.Width
+                $script:FcmLastHeight = $size.Height
+                return
+            }
             # Initial layout and resize only; NEVER clear on ordinary arrow navigation.
             if ($script:FcmAnsi) {
                 [Console]::Out.Write(([string][char]27) + '[H' + ([string][char]27) + '[J')
@@ -208,6 +306,14 @@ function Write-FcmScreen {
         $script:FcmLastHeight = $size.Height
     }
     catch {
+        if ($script:FcmSyncUpdateActive) {
+            try {
+                [Console]::Out.Write(([string][char]27) + '[?2026l')
+                [Console]::Out.Flush()
+            }
+            catch { }
+            $script:FcmSyncUpdateActive = $false
+        }
         # Older hosts may reject cursor positioning: safely return to the original renderer.
         $script:FcmLastFrame = @()
         $script:FcmLastStyleKeys = @()
