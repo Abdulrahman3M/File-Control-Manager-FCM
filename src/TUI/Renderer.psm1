@@ -4,6 +4,7 @@ $script:FcmLastStyleKeys = @()
 $script:FcmLastWidth = 0
 $script:FcmLastHeight = 0
 $script:FcmAnsi = $false
+$script:FcmFullRedraw = $true
 $script:FcmCursorHidden = $false
 
 function Initialize-FcmRenderer {
@@ -14,6 +15,7 @@ function Initialize-FcmRenderer {
     $script:FcmLastWidth = 0
     $script:FcmLastHeight = 0
     $script:FcmAnsi = $false
+    $script:FcmFullRedraw = $true
     $script:FcmCursorHidden = $false
     if (-not $script:FcmPlainOutput) {
         try {
@@ -106,6 +108,7 @@ function Restore-FcmScreen {
     $script:FcmLastStyleKeys = @()
     $script:FcmLastWidth = 0
     $script:FcmLastHeight = 0
+    $script:FcmFullRedraw = $true
 }
 
 function Get-FcmRenderedLine {
@@ -164,6 +167,16 @@ function Write-FcmScreen {
         if ($script:FcmLastWidth -ne $size.Width -or $script:FcmLastHeight -ne $size.Height) {
             $script:FcmLastFrame = @()
             $script:FcmLastStyleKeys = @()
+            $script:FcmFullRedraw = $true
+        }
+        if ($script:FcmFullRedraw) {
+            # Initial layout and resize only; NEVER clear on ordinary arrow navigation.
+            if ($script:FcmAnsi) {
+                [Console]::Out.Write(([string][char]27) + '[H' + ([string][char]27) + '[J')
+            } else {
+                try { Clear-Host } catch { }
+            }
+            $script:FcmFullRedraw = $false
         }
         $rows = [Math]::Max($current.Count, $script:FcmLastFrame.Count)
         for ($row = 0; $row -lt $rows; $row++) {
@@ -200,6 +213,7 @@ function Write-FcmScreen {
         $script:FcmLastStyleKeys = @()
         $script:FcmLastWidth = 0
         $script:FcmLastHeight = 0
+        $script:FcmFullRedraw = $true
         try { Clear-Host } catch { }
         foreach ($item in $visible) {
             Write-FcmStyledLine -Item $item
