@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/fcm-v3.2.2-hero.jpg" alt="Layered Windows folders protected by a shield and key, representing secure file management" width="100%">
+  <img src="https://raw.githubusercontent.com/Abdulrahman3M/File-Control-Manager-FCM/b8d24364722c22575faa068d39e14013649d4b4c/assets/fcm-v3.2.2-hero.jpg" alt="Layered Windows folders protected by a shield and key, representing secure file management" width="100%">
   <h1>File Control Manager v3.2.2</h1>
   <p><strong>A keyboard-first PowerShell workspace for file operations and Windows security diagnostics.</strong></p>
   <p>
