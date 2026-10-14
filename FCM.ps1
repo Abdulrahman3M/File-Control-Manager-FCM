@@ -43,8 +43,6 @@ catch {
 $environment = Get-FcmEnvironment
 Initialize-FcmTheme -IconMode 'Auto' -Platform $environment.Platform -NoColor:([bool]$env:NO_COLOR -or $environment.OutputRedirected)
 Initialize-FcmRenderer -PlainOutput:($environment.OutputRedirected -or $SmokeTest -or [bool]$ScriptedInput)
-# Register terminal restoration for abnormal exits as well as normal shutdown.
-$global:FCMRendererCleanupRegistered = $true
 
 $preflightFailures = @(Get-FcmPreflightFailures -Root $root)
 if ($preflightFailures.Count -gt 0) {
