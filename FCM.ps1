@@ -102,6 +102,7 @@ catch {
     exit 3
 }
 finally {
+    Restore-FcmScreen
     if ($controlCChanged) {
         try { [Console]::TreatControlCAsInput = $previousControlC } catch { }
     }
