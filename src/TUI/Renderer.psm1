@@ -1,11 +1,15 @@
 $script:FcmPlainOutput = $false
 $script:FcmLastFrame = @()
+$script:FcmLastStyleKeys = @()
+$script:FcmLastWidth = 0
 $script:FcmCursorHidden = $false
 
 function Initialize-FcmRenderer {
     param([switch]$PlainOutput)
     $script:FcmPlainOutput = [bool]$PlainOutput
     $script:FcmLastFrame = @()
+    $script:FcmLastStyleKeys = @()
+    $script:FcmLastWidth = 0
     $script:FcmCursorHidden = $false
     try {
         [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
@@ -85,6 +89,8 @@ function Restore-FcmScreen {
         $script:FcmCursorHidden = $false
     }
     $script:FcmLastFrame = @()
+    $script:FcmLastStyleKeys = @()
+    $script:FcmLastWidth = 0
 }
 
 function Get-FcmRenderedLine {
@@ -138,11 +144,18 @@ function Write-FcmScreen {
             try { [Console]::CursorVisible = $false; $script:FcmCursorHidden = $true } catch { }
         }
         $current = @($visible | ForEach-Object { Get-FcmRenderedLine -Line $_ })
+        $styles = @($visible | ForEach-Object { ([string]$_.Role + '|' + [string]$_.IconName) })
+        if ($script:FcmLastWidth -ne $size.Width) {
+            $script:FcmLastFrame = @()
+            $script:FcmLastStyleKeys = @()
+        }
         $rows = [Math]::Max($current.Count, $script:FcmLastFrame.Count)
         for ($row = 0; $row -lt $rows; $row++) {
             $newText = if ($row -lt $current.Count) { [string]$current[$row] } else { '' }
             $oldText = if ($row -lt $script:FcmLastFrame.Count) { [string]$script:FcmLastFrame[$row] } else { $null }
-            if ($null -ne $oldText -and $newText -ceq $oldText) { continue }
+            $oldStyle = if ($row -lt $script:FcmLastStyleKeys.Count) { [string]$script:FcmLastStyleKeys[$row] } else { $null }
+            $newStyle = if ($row -lt $styles.Count) { [string]$styles[$row] } else { '' }
+            if ($null -ne $oldText -and $newText -ceq $oldText -and $newStyle -ceq $oldStyle) { continue }
             [Console]::SetCursorPosition(0,$row)
             if ($row -lt $visible.Count) { Write-FcmStyledLine -Item $visible[$row] }
             # Clear stale characters at the end without clearing the screen.
@@ -150,6 +163,8 @@ function Write-FcmScreen {
             [Console]::Out.Write($escape + '[K')
         }
         $script:FcmLastFrame = $current
+        $script:FcmLastStyleKeys = $styles
+        $script:FcmLastWidth = $size.Width
     }
     catch {
         # Older hosts may reject cursor positioning: safely return to the original renderer.
