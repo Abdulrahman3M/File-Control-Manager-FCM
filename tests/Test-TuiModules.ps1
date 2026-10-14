@@ -110,4 +110,9 @@ $acceptedNumericPath = Read-FcmValidatedInput -Title 'Path test' -Prompt 'Target
 }
 Assert-FcmTest ($acceptedNumericPath.ToUpperInvariant() -eq $numericPath.ToUpperInvariant()) 'Path editor preserves every numeric character in numbered folder segments'
 
+$rendererSource = Get-Content -LiteralPath (Join-Path $root 'src/TUI/Renderer.psm1') -Raw
+Assert-FcmTest ($rendererSource -match 'SetCursorPosition' -and $rendererSource -match 'FcmLastFrame' -and $rendererSource -match '\[K') 'Renderer updates changed rows and clears stale tails without full-screen refresh on each arrow'
+Assert-FcmTest ($rendererSource -match 'FcmPlainOutput' -and $rendererSource -match 'Write-FcmStyledLine') 'Scripted and redirected output keeps the existing readable formatting'
+Assert-FcmTest ($rendererSource.Contains('FcmLastHeight') -and $rendererSource.Contains('FcmAnsi') -and $rendererSource.Contains('WindowWidth')) 'Renderer handles resize invalidation, VT detection and console-safe padding'
+Assert-FcmTest ($rendererSource.Contains('Get-FcmIconColor') -and $rendererSource.Contains('FcmLastStyleKeys')) 'Differential renderer retains independent icon colors and semantic style changes'
 Write-Output 'All PowerShell TUI module checks passed.'
