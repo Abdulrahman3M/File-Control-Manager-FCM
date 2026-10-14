@@ -1,7 +1,7 @@
 # Changelog
 
 ## 3.2.1 — 2026-10-14
-- Replaced per-key Clear-Host screen refresh with changed-row in-place rendering to reduce menu flicker.
+- Replaced per-key Clear-Host screen refresh with centralized, style-aware changed-row in-place rendering to reduce menu flicker. Added ANSI VT detection, terminal-resize cache invalidation and non-ANSI legacy line-padding fallback.
 - Preserved semantic icon colors, Emoji/Symbol/ASCII fallbacks, muted help text, and the existing menu layout.
 - Kept plain/redirected diagnostic output compatible with existing smoke tests.
 
